@@ -2,7 +2,7 @@ package pseudoc
 
 import fastparse.*
 import JavaWhitespace.*
-import pseudoc.Ast.{Algorithm, VariableDecl, Variables}
+import pseudoc.Ast.{Algorithm, ForLoop, Instruction, VariableDecl, Variables}
 
 object PseudoCodeParser {
   /*
@@ -44,7 +44,7 @@ Fin
 
   /** "chaine de caracteres" must be before "chaine" */
   def typeString[$: P]: P[String] = P(
-    ("chaine de caracteres" | "chaine de caractères" | "chaîne de caractères" | "chaîne" | "chaine" | "string")
+    StringIn("chaine de caracteres", "chaine de caractères", "chaîne de caractères", "chaîne", "chaine", "string", "str")
   ).map(_ => "string")
 
   def tpe[$: P] = typeString
@@ -55,5 +55,16 @@ Fin
   def variables[$: P]: P[Variables] = P(
     "Variables" ~ ":" ~ variableDecl.rep(sep = ",")
   ).map(Variables.apply)
+
+  def digits[$: P]: P[Unit] = P( CharsWhileIn("0-9") )
+  def integer[$: P]: P[Int] = digits.!.map(_.toInt)
+
+  def forLoop[$: P]  = P(
+    StringIn("Pour","For") ~ identifier ~ "<-" ~
+      integer ~ StringIn("à", "a", "to") ~ integer ~ StringIn("Faire", "do") ~
+      instruction.rep ~ StringIn("Fin Pour", "fin pour", "End For", "end for")
+  ).map(ForLoop.apply)
+
+  def instruction[$: P]: P[Instruction] = forLoop
 
 }
