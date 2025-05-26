@@ -83,11 +83,10 @@ Fin
       statement.rep ~ StringIn("Fin Pour", "fin pour", "End For", "end for")
   ).map(ForLoop.apply)
 
-  def stringChars(c: Char) = c != '\"' && c != '\\'
+  def stringChars(c: Char) = c != '\"'
   def strChars[$: P] = P(CharsWhile(stringChars))
-  def escape[$: P] = P("\\" ~ (CharIn("\"/\\\\bfnrt")))
   def stringLiteral[$: P]: P[String] = P(
-    "\"" ~/ (strChars | escape).rep.! ~ "\""
+    "\"" ~/ (strChars).rep.! ~ "\""
   )
 
   def expressionString[$: P]: P[StringConcat] =

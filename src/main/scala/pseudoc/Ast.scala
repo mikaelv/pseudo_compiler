@@ -51,7 +51,7 @@ object Ast {
 
   def evalString(item: ExpressionItem[_], vars: Map[String, Any]): String =
     item match
-      case StringLiteral(value) => value
+      case StringLiteral(value) => value.replaceAll("\\\\NL", "\n")
       case StringRef(varName)   => vars(varName).toString
       case IntRef(varName)      => vars(varName).toString
 }
