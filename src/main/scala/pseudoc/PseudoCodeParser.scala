@@ -2,7 +2,17 @@ package pseudoc
 
 import fastparse.*
 import JavaWhitespace.*
-import pseudoc.Ast.{Algorithm, ForLoop, Instruction, VariableDecl, Variables}
+import pseudoc.Ast.{
+  Algorithm,
+  ForLoop,
+  FunctionCall,
+  Statement,
+  StringConcat,
+  StringLiteral,
+  StringRef,
+  VariableDecl,
+  Variables
+}
 
 object PseudoCodeParser {
   /*
@@ -44,7 +54,15 @@ Fin
 
   /** "chaine de caracteres" must be before "chaine" */
   def typeString[$: P]: P[String] = P(
-    StringIn("chaine de caracteres", "chaine de caractères", "chaîne de caractères", "chaîne", "chaine", "string", "str")
+    StringIn(
+      "chaine de caracteres",
+      "chaine de caractères",
+      "chaîne de caractères",
+      "chaîne",
+      "chaine",
+      "string",
+      "str"
+    )
   ).map(_ => "string")
 
   def tpe[$: P] = typeString
@@ -56,15 +74,39 @@ Fin
     "Variables" ~ ":" ~ variableDecl.rep(sep = ",")
   ).map(Variables.apply)
 
-  def digits[$: P]: P[Unit] = P( CharsWhileIn("0-9") )
+  def digits[$: P]: P[Unit] = P(CharsWhileIn("0-9"))
   def integer[$: P]: P[Int] = digits.!.map(_.toInt)
 
-  def forLoop[$: P]  = P(
-    StringIn("Pour","For") ~ identifier ~ "<-" ~
+  def forLoop[$: P] = P(
+    StringIn("Pour", "For") ~ identifier ~ "<-" ~
       integer ~ StringIn("à", "a", "to") ~ integer ~ StringIn("Faire", "do") ~
-      instruction.rep ~ StringIn("Fin Pour", "fin pour", "End For", "end for")
+      statement.rep ~ StringIn("Fin Pour", "fin pour", "End For", "end for")
   ).map(ForLoop.apply)
 
-  def instruction[$: P]: P[Instruction] = forLoop
+  def stringChars(c: Char) = c != '\"' && c != '\\'
+  def strChars[$: P] = P(CharsWhile(stringChars))
+  def escape[$: P] = P("\\" ~ (CharIn("\"/\\\\bfnrt")))
+  def stringLiteral[$: P]: P[String] = P(
+    "\"" ~/ (strChars | escape).rep.! ~ "\""
+  )
+
+  def expressionString[$: P]: P[StringConcat] =
+    (identifier.map(StringRef.apply) | stringLiteral.map(StringLiteral.apply))
+      .rep(sep = "+")
+      .map(StringConcat.apply)
+
+  def print[$: P]: P[FunctionCall] = P(
+    StringIn(
+      "Ecrire",
+      "ecrire",
+      "écrire",
+      "Write",
+      "write",
+      "Print",
+      "print"
+    ) ~ "(" ~ expressionString ~ ")"
+  ).map(concat => FunctionCall("print", Seq(concat)))
+
+  def statement[$: P]: P[Statement] = forLoop | print
 
 }

@@ -5,7 +5,16 @@ import PseudoCodeParser.*
 import fastparse.*
 import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers.*
-import pseudoc.Ast.{Algorithm, ForLoop, VariableDecl, Variables}
+import pseudoc.Ast.{
+  Algorithm,
+  ForLoop,
+  FunctionCall,
+  StringConcat,
+  StringLiteral,
+  StringRef,
+  VariableDecl,
+  Variables
+}
 
 class PseudoCodeParserTest extends AnyFunSuiteLike:
   def check[A](
@@ -47,4 +56,27 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     )
 
   test("for loop"):
-    check("Pour i <- 1 à 10 Faire\nFin Pour", forLoop(_), ForLoop("i", 1, 10, Seq()))
+    check(
+      "Pour i <- 1 à 10 Faire\nFin Pour",
+      forLoop(_),
+      ForLoop("i", 1, 10, Seq())
+    )
+
+  test("write"):
+    check(
+      "Write(a + \"hello\" + b + \"world\")",
+      print(_),
+      FunctionCall(
+        "print",
+        Seq(
+          StringConcat(
+            Seq(
+              StringRef("a"),
+              StringLiteral("hello"),
+              StringRef("b"),
+              StringLiteral("world")
+            )
+          )
+        )
+      )
+    )
