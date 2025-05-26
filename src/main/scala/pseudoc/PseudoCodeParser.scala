@@ -85,9 +85,10 @@ Fin
 
   def stringChars(c: Char) = c != '\"'
   def strChars[$: P] = P(CharsWhile(stringChars))
+  // TODO there might be a way to handle escape chars more gracefully
   def stringLiteral[$: P]: P[String] = P(
     "\"" ~/ (strChars).rep.! ~ "\""
-  )
+  ).map(_.replaceAll("\\\\NL", "\n"))
 
   def expressionString[$: P]: P[StringConcat] =
     (identifier.map(StringRef.apply) | stringLiteral.map(StringLiteral.apply))

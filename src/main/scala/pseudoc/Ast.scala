@@ -46,7 +46,7 @@ object Ast {
 
   def evalExpr(expr: Expression[_], vars: Map[String, Any]): String =
     expr match
-      case StringLiteral(value) => value.replaceAll("\\\\NL", "\n")
+      case StringLiteral(value) => value
       case StringRef(varName)   => vars(varName).toString
       case IntRef(varName)      => vars(varName).toString
       case StringConcat(values) => values.map(e => evalExpr(e, vars)).mkString
