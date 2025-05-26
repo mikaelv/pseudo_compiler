@@ -16,14 +16,13 @@ object Ast {
       end: Int,
       statements: Seq[Statement]
   ) extends Statement
-  sealed trait ExpressionItem[A]
-  case class StringLiteral(value: String) extends ExpressionItem[String]
-  case class StringRef(varName: String) extends ExpressionItem[String]
-  case class IntRef(varName: String) extends ExpressionItem[Int]
 
   sealed trait Expression[A]
-  case class StringConcat(values: Seq[ExpressionItem[_]])
-      extends Expression[String]
+  case class StringLiteral(value: String) extends Expression[String]
+  case class StringRef(varName: String) extends Expression[String]
+  case class IntRef(varName: String) extends Expression[Int]
+
+  case class StringConcat(values: Seq[Expression[_]]) extends Expression[String]
   case class FunctionCall(fnName: String, args: Seq[Expression[_]])
       extends Statement
 
@@ -34,8 +33,9 @@ object Ast {
           f.statements.foreach(s => eval(s, vars + (f.variable -> i)))
         }
 
-      case f@FunctionCall("print", args) =>
-        val arg0: Expression[String] = args.head.asInstanceOf[Expression[String]]
+      case f @ FunctionCall("print", args) =>
+        val arg0: Expression[String] =
+          args.head.asInstanceOf[Expression[String]]
         print(evalExpr(arg0, vars))
 
       case FunctionCall(fnName, args) => ???
@@ -44,14 +44,11 @@ object Ast {
 
   }
 
-  def evalExpr(expression: Expression[String], vars: Map[String, Any]): String =
-    expression match
-      case StringConcat(values) =>
-        values.map(e => evalString(e, vars)).mkString
-
-  def evalString(item: ExpressionItem[_], vars: Map[String, Any]): String =
-    item match
+  def evalExpr(expr: Expression[_], vars: Map[String, Any]): String =
+    expr match
       case StringLiteral(value) => value.replaceAll("\\\\NL", "\n")
       case StringRef(varName)   => vars(varName).toString
       case IntRef(varName)      => vars(varName).toString
+      case StringConcat(values) => values.map(e => evalExpr(e, vars)).mkString
+
 }
