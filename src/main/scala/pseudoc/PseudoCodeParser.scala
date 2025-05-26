@@ -44,7 +44,8 @@ Fin
 
   /** "chaine de caracteres" must be before "chaine" */
   def typeString[$: P]: P[String] = P(
-    ("chaine de caractères", "chaîne de caractères" | "chaîne" | "chaine" | "string")).map(_ => "string")
+    ("chaine de caracteres" | "chaine de caractères" | "chaîne de caractères" | "chaîne" | "chaine" | "string")
+  ).map(_ => "string")
 
   def tpe[$: P] = typeString
 
