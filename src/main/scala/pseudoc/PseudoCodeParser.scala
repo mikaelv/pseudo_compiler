@@ -2,27 +2,7 @@ package pseudoc
 
 import fastparse.*
 import JavaWhitespace.*
-import pseudoc.Ast.{
-  Algorithm,
-  Assignment,
-  BooleanExpression,
-  Comparison,
-  ComparisonOperator,
-  Expression,
-  ForLoop,
-  FunctionCall,
-  IfStatement,
-  IntAssignment,
-  IntLiteral,
-  IntRef,
-  Statement,
-  StringAssignment,
-  StringConcat,
-  StringLiteral,
-  StringRef,
-  VariableDecl,
-  Variables
-}
+import pseudoc.Ast.{Algorithm, Assignment, BooleanExpression, Comparison, ComparisonOperator, Expression, ForLoop, FunctionCall, IfStatement, IntAddSub, IntAssignment, IntLiteral, IntMultDiv, IntRef, Statement, StringAssignment, StringConcat, StringLiteral, StringRef, VariableDecl, Variables}
 
 object PseudoCodeParser {
 
@@ -87,9 +67,20 @@ object PseudoCodeParser {
     ) ~ "(" ~ expressionString ~ ")"
   ).map(concat => FunctionCall("print", Seq(concat)))
 
+
+
   // Expression parsing
   def numericExpression[$: P]: P[Expression[Int]] =
     (integer.map(IntLiteral.apply) | identifier.map(IntRef.apply))
+
+  def parens[$: P]: P[IntAddSub] = P("(" ~/ addSub ~ ")")
+
+  def factor[$: P]: P[Expression[Int]] = P(numericExpression | parens)
+
+  def divMul[$: P]: P[IntMultDiv] = P(factor ~ (CharIn("*/").! ~/ factor).rep).map(IntMultDiv.create)
+
+  def addSub[$: P]: P[IntAddSub] = P(divMul ~ (CharIn("+\\-").! ~/ divMul).rep).map(IntAddSub.create)
+
 
   def booleanOperator[$: P]: P[ComparisonOperator] = P(
     StringIn("=", "==").map(_ => ComparisonOperator.Equal) |
@@ -120,7 +111,7 @@ object PseudoCodeParser {
   
   // Integer assignment - this should come first in the assignment parser
   def intAssignment[$: P]: P[IntAssignment] = P(
-    identifier ~ "<-" ~ numericExpression
+    identifier ~ "<-" ~ addSub
   ).map { case (variable, value) => IntAssignment(variable, value) }
   
   // String assignment

@@ -5,26 +5,7 @@ import PseudoCodeParser.*
 import fastparse.*
 import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers.*
-import pseudoc.Ast.{
-  Algorithm,
-  Assignment,
-  BooleanExpression,
-  Comparison,
-  ComparisonOperator,
-  ForLoop,
-  FunctionCall,
-  IfStatement,
-  IntAssignment,
-  IntLiteral,
-  IntRef,
-  Statement,
-  StringAssignment,
-  StringConcat,
-  StringLiteral,
-  StringRef,
-  VariableDecl,
-  Variables
-}
+import pseudoc.Ast.{Algorithm, Assignment, BooleanExpression, Comparison, ComparisonOperator, ForLoop, FunctionCall, IfStatement, IntAddSub, IntAssignment, IntLiteral, IntMultDiv, IntRef, Statement, StringAssignment, StringConcat, StringLiteral, StringRef, VariableDecl, Variables}
 
 class PseudoCodeParserTest extends AnyFunSuiteLike:
   def check[A](
@@ -165,7 +146,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check(
       "x <- 42",
       assignment(_),
-      IntAssignment("x", IntLiteral(42))
+      IntAssignment("x", IntAddSub(IntMultDiv(IntLiteral(42), Seq.empty), Seq.empty))
     )
     
   test("variable assignment with string"):

@@ -180,3 +180,10 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     result2.console.getOutput should be("x is 42\n")
     result2.vars("x") should be(42)
   }
+
+  test("arithmetic operation") {
+    val code = "x <- 2 + 3*(x+3) - y"
+    val Parsed.Success(stmt, _) = parse(code, assignment(_))
+    val result = evalWithVars(stmt, Map("x" -> 2, "y" -> 4)).vars
+    result should be(Map("x" -> 13, "y" -> 4))
+  }

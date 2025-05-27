@@ -70,12 +70,7 @@ object PseudoInterpreter {
           throw new RuntimeException(s"Type error: Cannot assign integer value to non-integer variable '${intAssign.variable}'")
         }
         
-        // Evaluate the int expression to string first (as that's what evalExpr returns)
-        val stringValue = evalExpr(intAssign.value, vars)
-        // Then convert to int (this should always work since we've ensured type safety at parse time)
-        val intValue = stringValue.toInt
-        
-        // Return with updated variable map
+        val intValue = evalIntExpr(intAssign.value, vars)
         EvalResult(console, vars + (intAssign.variable -> intValue))
     }
   }
@@ -83,13 +78,14 @@ object PseudoInterpreter {
   def evalBoolExpr(expr: BooleanExpression, vars: Map[String, Any]): Boolean = {
     expr match {
       case Comparison(left, op, right) => 
-        val leftVal = evalExpr(left, vars)
-        val rightVal = evalExpr(right, vars)
+        val leftVal = evalIntExpr(left, vars)
+        val rightVal = evalIntExpr(right, vars)
         
         op match {
           case ComparisonOperator.Equal => leftVal == rightVal
           case ComparisonOperator.NotEqual => leftVal != rightVal
-          case ComparisonOperator.LessThan => 
+          case ComparisonOperator.LessThan =>
+            // TODO why .toDouble ? Claude FFS, missed it
             leftVal.toDouble < rightVal.toDouble
           case ComparisonOperator.GreaterThan => 
             leftVal.toDouble > rightVal.toDouble
@@ -101,12 +97,34 @@ object PseudoInterpreter {
     }
   }
 
+  // TODO move vars to a class with one Map per type
+  def evalIntExpr(expr: Expression[Int], vars: Map[String, Any]): Int = {
+    expr match {
+      case IntRef(varName) => vars(varName).asInstanceOf[Int]
+      case IntLiteral(value) => value
+      case IntMultDiv(base, ops) =>
+        ops.foldLeft(evalIntExpr(base, vars)) { case (left, (op, right)) => op match {
+          case MultDivOperator.Mult => left * evalIntExpr(right, vars)
+          case MultDivOperator.Div => left / evalIntExpr(right, vars)
+        }
+        }
+
+
+      case IntAddSub(base, ops) =>
+        ops.foldLeft(evalIntExpr(base, vars)) { case (left, (op, right)) => op match {
+          case AddSubOperator.Add => left + evalIntExpr(right, vars)
+          case AddSubOperator.Sub => left - evalIntExpr(right, vars)
+        }
+      }
+    }
+  }
+
+
   def evalExpr(expr: Expression[_], vars: Map[String, Any]): String =
     expr match
       case StringLiteral(value) => value
       case StringRef(varName)   => vars(varName).toString
-      case IntRef(varName)      => vars(varName).toString
-      case IntLiteral(value)    => value.toString
       case StringConcat(values) => values.map(e => evalExpr(e, vars)).mkString
+      // TODO move to a different method
       case boolExpr: BooleanExpression => evalBoolExpr(boolExpr, vars).toString
 }
