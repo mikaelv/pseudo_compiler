@@ -5,15 +5,20 @@ import fastparse.*
 import Ast.*
 import PseudoCodeParser.*
 import fastparse.Parsed.Success
+import org.scalatest.matchers.should.Matchers
 
-class AstEvalTest extends AnyFunSuiteLike:
+class AstEvalTest extends AnyFunSuiteLike with Matchers:
   test("for loop"):
     val code =
       """Pour i <- 1 à 10 Faire
         |  Ecrire("Valeur de i: " + i + "\NL")
         |Fin Pour""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    Ast.eval(stmt, Map.empty)
+    val console = Ast.eval(stmt, Map.empty, TestConsoleOutput())
+    
+    // Assert that output contains expected text
+    val expected = (1 to 10).map(i => s"Valeur de i: $i\n").mkString
+    console.getOutput shouldBe expected
     
   test("if statement - true condition"):
     val code =
@@ -21,7 +26,9 @@ class AstEvalTest extends AnyFunSuiteLike:
         |  Ecrire("x is 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    Ast.eval(stmt, Map("x" -> 5))
+    val console = Ast.eval(stmt, Map("x" -> 5), TestConsoleOutput())
+    
+    console.getOutput shouldBe "x is 5\n"
     
   test("if statement - false condition"):
     val code =
@@ -29,7 +36,9 @@ class AstEvalTest extends AnyFunSuiteLike:
         |  Ecrire("x is 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    Ast.eval(stmt, Map("x" -> 10))
+    val console = Ast.eval(stmt, Map("x" -> 10), TestConsoleOutput())
+    
+    console.getOutput shouldBe ""
     
   test("if-else statement - true condition"):
     val code =
@@ -39,7 +48,9 @@ class AstEvalTest extends AnyFunSuiteLike:
         |  Ecrire("x is not 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    Ast.eval(stmt, Map("x" -> 5))
+    val console = Ast.eval(stmt, Map("x" -> 5), TestConsoleOutput())
+    
+    console.getOutput shouldBe "x is 5\n"
     
   test("if-else statement - false condition"):
     val code =
@@ -49,7 +60,9 @@ class AstEvalTest extends AnyFunSuiteLike:
         |  Ecrire("x is not 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    Ast.eval(stmt, Map("x" -> 10))
+    val console = Ast.eval(stmt, Map("x" -> 10), TestConsoleOutput())
+    
+    console.getOutput shouldBe "x is not 5\n"
     
   test("nested if statements"):
     val code =
@@ -63,4 +76,6 @@ class AstEvalTest extends AnyFunSuiteLike:
         |  Ecrire("x is less than or equal to 0\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    Ast.eval(stmt, Map("x" -> 5))
+    val console = Ast.eval(stmt, Map("x" -> 5), TestConsoleOutput())
+    
+    console.getOutput shouldBe "x is between 0 and 10\n"

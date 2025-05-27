@@ -2,6 +2,31 @@ package pseudoc
 
 import pseudoc.Ast.Expression
 
+// Immutable console output interface
+trait ConsoleOutput {
+  def print(text: String): ConsoleOutput
+  def getOutput: String
+}
+
+// Default implementation that prints to console and captures output
+case class DefaultConsoleOutput(output: String = "") extends ConsoleOutput {
+  def print(text: String): ConsoleOutput = {
+    scala.Predef.print(text)
+    DefaultConsoleOutput(output + text)
+  }
+  
+  def getOutput: String = output
+}
+
+// Test implementation that only captures output without printing to console
+case class TestConsoleOutput(output: String = "") extends ConsoleOutput {
+  def print(text: String): ConsoleOutput = {
+    TestConsoleOutput(output + text)
+  }
+  
+  def getOutput: String = output
+}
+
 sealed trait Ast {}
 
 object Ast {
@@ -39,25 +64,34 @@ object Ast {
   case class FunctionCall(fnName: String, args: Seq[Expression[_]])
       extends Statement
 
-  def eval(stmt: Statement, vars: Map[String, Any]): Unit = {
+  def eval(stmt: Statement, vars: Map[String, Any], console: ConsoleOutput = DefaultConsoleOutput()): ConsoleOutput = {
     stmt match {
       case f: ForLoop =>
-        for (i <- f.start to f.end) {
-          f.statements.foreach(s => eval(s, vars + (f.variable -> i)))
+        val finalConsole = (f.start to f.end).foldLeft(console) { (currentConsole, i) =>
+          f.statements.foldLeft(currentConsole) { (c, s) =>
+            eval(s, vars + (f.variable -> i), c)
+          }
         }
+        finalConsole
 
       case f @ FunctionCall("print", args) =>
         val arg0: Expression[String] =
           args.head.asInstanceOf[Expression[String]]
-        print(evalExpr(arg0, vars))
+        console.print(evalExpr(arg0, vars))
 
       case FunctionCall(fnName, args) => ???
         
       case ifStmt: IfStatement =>
         if (evalBoolExpr(ifStmt.condition, vars)) {
-          ifStmt.thenBranch.foreach(s => eval(s, vars))
+          ifStmt.thenBranch.foldLeft(console) { (c, s) => 
+            eval(s, vars, c)
+          }
         } else if (ifStmt.elseBranch.isDefined) {
-          ifStmt.elseBranch.get.foreach(s => eval(s, vars))
+          ifStmt.elseBranch.get.foldLeft(console) { (c, s) => 
+            eval(s, vars, c)
+          }
+        } else {
+          console
         }
     }
   }
@@ -91,5 +125,4 @@ object Ast {
       case IntLiteral(value)    => value.toString
       case StringConcat(values) => values.map(e => evalExpr(e, vars)).mkString
       case boolExpr: BooleanExpression => evalBoolExpr(boolExpr, vars).toString
-
 }
