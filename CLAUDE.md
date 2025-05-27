@@ -1,5 +1,8 @@
 # Pseudo Compiler Project Guidelines
 
+## Running tests
+Do not try to build or run tests, the human prefers to do it himself.
+
 ## Code Style Preferences
 
 ### Immutability

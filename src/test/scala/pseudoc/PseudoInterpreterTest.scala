@@ -1,20 +1,19 @@
 package pseudoc
 
-import org.scalatest.funsuite.AnyFunSuiteLike
 import fastparse.*
-import Ast.*
-import PseudoCodeParser.*
-import fastparse.Parsed.Success
+import org.scalatest.funsuite.AnyFunSuiteLike
 import org.scalatest.matchers.should.Matchers
+import pseudoc.PseudoCodeParser.*
+import pseudoc.PseudoInterpreter.eval
 
-class AstEvalTest extends AnyFunSuiteLike with Matchers:
+class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   test("for loop"):
     val code =
       """Pour i <- 1 à 10 Faire
         |  Ecrire("Valeur de i: " + i + "\NL")
         |Fin Pour""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = Ast.eval(stmt, Map.empty, TestConsoleOutput())
+    val console = eval(stmt, Map.empty, TestConsoleOutput())
     
     // Assert that output contains expected text
     val expected = (1 to 10).map(i => s"Valeur de i: $i\n").mkString
@@ -26,7 +25,7 @@ class AstEvalTest extends AnyFunSuiteLike with Matchers:
         |  Ecrire("x is 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = Ast.eval(stmt, Map("x" -> 5), TestConsoleOutput())
+    val console = eval(stmt, Map("x" -> 5), TestConsoleOutput())
     
     console.getOutput shouldBe "x is 5\n"
     
@@ -36,7 +35,7 @@ class AstEvalTest extends AnyFunSuiteLike with Matchers:
         |  Ecrire("x is 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = Ast.eval(stmt, Map("x" -> 10), TestConsoleOutput())
+    val console = eval(stmt, Map("x" -> 10), TestConsoleOutput())
     
     console.getOutput shouldBe ""
     
@@ -48,7 +47,7 @@ class AstEvalTest extends AnyFunSuiteLike with Matchers:
         |  Ecrire("x is not 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = Ast.eval(stmt, Map("x" -> 5), TestConsoleOutput())
+    val console = eval(stmt, Map("x" -> 5), TestConsoleOutput())
     
     console.getOutput shouldBe "x is 5\n"
     
@@ -60,7 +59,7 @@ class AstEvalTest extends AnyFunSuiteLike with Matchers:
         |  Ecrire("x is not 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = Ast.eval(stmt, Map("x" -> 10), TestConsoleOutput())
+    val console = eval(stmt, Map("x" -> 10), TestConsoleOutput())
     
     console.getOutput shouldBe "x is not 5\n"
     
@@ -76,6 +75,6 @@ class AstEvalTest extends AnyFunSuiteLike with Matchers:
         |  Ecrire("x is less than or equal to 0\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = Ast.eval(stmt, Map("x" -> 5), TestConsoleOutput())
+    val console = eval(stmt, Map("x" -> 5), TestConsoleOutput())
     
     console.getOutput shouldBe "x is between 0 and 10\n"
