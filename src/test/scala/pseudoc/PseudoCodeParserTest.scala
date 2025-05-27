@@ -7,15 +7,18 @@ import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers.*
 import pseudoc.Ast.{
   Algorithm,
+  Assignment,
   BooleanExpression,
   Comparison,
   ComparisonOperator,
   ForLoop,
   FunctionCall,
   IfStatement,
+  IntAssignment,
   IntLiteral,
   IntRef,
   Statement,
+  StringAssignment,
   StringConcat,
   StringLiteral,
   StringRef,
@@ -156,4 +159,25 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
         Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
         Some(Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is not 5")))))))
       )
+    )
+    
+  test("variable assignment with integer"):
+    check(
+      "x <- 42",
+      assignment(_),
+      IntAssignment("x", IntLiteral(42))
+    )
+    
+  test("variable assignment with string"):
+    check(
+      "message <- \"Hello, world!\"",
+      assignment(_),
+      StringAssignment("message", StringConcat(Seq(StringLiteral("Hello, world!"))))
+    )
+    
+  test("variable assignment with concatenation"):
+    check(
+      "greeting <- \"Hello, \" + name",
+      assignment(_),
+      StringAssignment("greeting", StringConcat(Seq(StringLiteral("Hello, "), StringRef("name"))))
     )

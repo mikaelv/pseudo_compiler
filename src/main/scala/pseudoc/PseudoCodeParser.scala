@@ -4,6 +4,7 @@ import fastparse.*
 import JavaWhitespace.*
 import pseudoc.Ast.{
   Algorithm,
+  Assignment,
   BooleanExpression,
   Comparison,
   ComparisonOperator,
@@ -11,9 +12,11 @@ import pseudoc.Ast.{
   ForLoop,
   FunctionCall,
   IfStatement,
+  IntAssignment,
   IntLiteral,
   IntRef,
   Statement,
+  StringAssignment,
   StringConcat,
   StringLiteral,
   StringRef,
@@ -22,37 +25,7 @@ import pseudoc.Ast.{
 }
 
 object PseudoCodeParser {
-  /*
-Algorithme : recherche_dichotomique
-Variables :
-l, r, m : entier
-iter, pos, val : entier
-T [10] : tableau d'entier
-Début
-1: T ← {1, 1, 2, 3, 5, 8, 13, 21, 34, 55}
-2: Lire(val)
-3: pos ← −1
-4: iter ← 0
-5: l ← 1
-6: r ← 10
-7: Tant que l ≤ r ET pos = −1 Faire
-8: iter ← iter + 1
-9: m ← l + (r − l)/2
-10: Si T [m] = val Alors
-11: pos ← m
-12: Sinon
-13: Si T [m] < val Alors
-14: l ← m + 1
-15: Sinon
-16: r ← m − 1
-17: Fin Si
-18: Fin Si
-19: Fin Tant que
-20: Si pos̸ = −1 Alors
-21: Ecrire("Valeur trouvée en ", iter, "itérations\NL")
-22: Fin Si
-Fin
-   */
+
   def identifier[$: P]: P[String] =
     (CharIn("a-zA-Z") ~ CharIn("a-zA-Z_0-9").rep).!
 
@@ -144,7 +117,20 @@ Fin
     case (condition, thenBranch, None) =>
       IfStatement(condition, thenBranch, None)
   }
+  
+  // Integer assignment - this should come first in the assignment parser
+  def intAssignment[$: P]: P[IntAssignment] = P(
+    identifier ~ "<-" ~ numericExpression
+  ).map { case (variable, value) => IntAssignment(variable, value) }
+  
+  // String assignment
+  def stringAssignment[$: P]: P[StringAssignment] = P(
+    identifier ~ "<-" ~ expressionString
+  ).map { case (variable, value) => StringAssignment(variable, value) }
+  
+  // Combined assignment - try int assignment first to avoid ambiguity
+  def assignment[$: P]: P[Assignment] = intAssignment | stringAssignment
 
-  def statement[$: P]: P[Statement] = forLoop | ifStatement | print
+  def statement[$: P]: P[Statement] = forLoop | ifStatement | print | assignment
 
 }

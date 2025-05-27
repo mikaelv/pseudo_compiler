@@ -45,6 +45,21 @@ object Ast {
       thenBranch: Seq[Statement],
       elseBranch: Option[Seq[Statement]] = None
   ) extends Statement
+  
+  // Typed assignment to enforce type safety at compile time
+  sealed trait Assignment extends Statement {
+    def variable: String
+  }
+  
+  case class StringAssignment(
+      variable: String,
+      value: Expression[String]
+  ) extends Assignment
+  
+  case class IntAssignment(
+      variable: String,
+      value: Expression[Int]
+  ) extends Assignment
 
   sealed trait Expression[A]
   case class StringLiteral(value: String) extends Expression[String]
