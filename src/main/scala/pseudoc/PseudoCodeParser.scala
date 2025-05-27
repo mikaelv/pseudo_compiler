@@ -4,8 +4,15 @@ import fastparse.*
 import JavaWhitespace.*
 import pseudoc.Ast.{
   Algorithm,
+  BooleanExpression,
+  Comparison,
+  ComparisonOperator,
+  Expression,
   ForLoop,
   FunctionCall,
+  IfStatement,
+  IntLiteral,
+  IntRef,
   Statement,
   StringConcat,
   StringLiteral,
@@ -20,7 +27,7 @@ Algorithme : recherche_dichotomique
 Variables :
 l, r, m : entier
 iter, pos, val : entier
-T [10] : tableau d’entier
+T [10] : tableau d'entier
 Début
 1: T ← {1, 1, 2, 3, 5, 8, 13, 21, 34, 55}
 2: Lire(val)
@@ -107,6 +114,37 @@ Fin
     ) ~ "(" ~ expressionString ~ ")"
   ).map(concat => FunctionCall("print", Seq(concat)))
 
-  def statement[$: P]: P[Statement] = forLoop | print
+  // Expression parsing
+  def numericExpression[$: P]: P[Expression[Int]] =
+    (integer.map(IntLiteral.apply) | identifier.map(IntRef.apply))
+
+  def booleanOperator[$: P]: P[ComparisonOperator] = P(
+    StringIn("=", "==").map(_ => ComparisonOperator.Equal) |
+      StringIn("!=", "<>").map(_ => ComparisonOperator.NotEqual) |
+      StringIn("≤", "<=").map(_ => ComparisonOperator.LessThanEqual) |
+      StringIn("≥", ">=").map(_ => ComparisonOperator.GreaterThanEqual) |
+      StringIn("<").map(_ => ComparisonOperator.LessThan) |
+      StringIn(">").map(_ => ComparisonOperator.GreaterThan)
+  )
+
+  def comparisonExpr[$: P]: P[BooleanExpression] = P(
+    numericExpression ~ booleanOperator ~ numericExpression
+  ).map { case (left, op, right) => Comparison(left, op, right) }
+
+  def booleanExpression[$: P]: P[BooleanExpression] = comparisonExpr
+
+  def ifStatement[$: P]: P[IfStatement] = P(
+    StringIn("Si", "If") ~ booleanExpression ~
+      StringIn("Alors", "Then") ~ statement.rep ~
+      (StringIn("Sinon", "Else") ~ statement.rep).? ~
+      StringIn("Fin Si", "End If")
+  ).map {
+    case (condition, thenBranch, Some(elseBranch)) =>
+      IfStatement(condition, thenBranch, Some(elseBranch))
+    case (condition, thenBranch, None) =>
+      IfStatement(condition, thenBranch, None)
+  }
+
+  def statement[$: P]: P[Statement] = forLoop | ifStatement | print
 
 }

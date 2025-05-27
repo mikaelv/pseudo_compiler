@@ -7,8 +7,15 @@ import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers.*
 import pseudoc.Ast.{
   Algorithm,
+  BooleanExpression,
+  Comparison,
+  ComparisonOperator,
   ForLoop,
   FunctionCall,
+  IfStatement,
+  IntLiteral,
+  IntRef,
+  Statement,
   StringConcat,
   StringLiteral,
   StringRef,
@@ -78,5 +85,75 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
             )
           )
         )
+      )
+    )
+    
+  test("comparison expression"):
+    check(
+      "x = 5",
+      comparisonExpr(_),
+      Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5))
+    )
+    
+    check(
+      "x != 5",
+      comparisonExpr(_),
+      Comparison(IntRef("x"), ComparisonOperator.NotEqual, IntLiteral(5))
+    )
+    
+    check(
+      "x < 5",
+      comparisonExpr(_),
+      Comparison(IntRef("x"), ComparisonOperator.LessThan, IntLiteral(5))
+    )
+    
+    check(
+      "x > 5",
+      comparisonExpr(_),
+      Comparison(IntRef("x"), ComparisonOperator.GreaterThan, IntLiteral(5))
+    )
+    
+    check(
+      "x <= 5",
+      comparisonExpr(_),
+      Comparison(IntRef("x"), ComparisonOperator.LessThanEqual, IntLiteral(5))
+    )
+    
+    check(
+      "x >= 5",
+      comparisonExpr(_),
+      Comparison(IntRef("x"), ComparisonOperator.GreaterThanEqual, IntLiteral(5))
+    )
+    
+  test("if statement - no else"):
+    check(
+      "Si x = 5 Alors\nEcrire(\"x is 5\")\nFin Si",
+      ifStatement(_),
+      IfStatement(
+        Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
+        Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
+        None
+      )
+    )
+    
+  test("if statement - with else"):
+    check(
+      "Si x = 5 Alors\nEcrire(\"x is 5\")\nSinon\nEcrire(\"x is not 5\")\nFin Si",
+      ifStatement(_),
+      IfStatement(
+        Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
+        Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
+        Some(Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is not 5")))))))
+      )
+    )
+    
+  test("if statement - english syntax"):
+    check(
+      "If x = 5 Then\nPrint(\"x is 5\")\nElse\nPrint(\"x is not 5\")\nEnd If",
+      ifStatement(_),
+      IfStatement(
+        Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
+        Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
+        Some(Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is not 5")))))))
       )
     )
