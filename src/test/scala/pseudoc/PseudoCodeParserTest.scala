@@ -5,7 +5,7 @@ import PseudoCodeParser.*
 import fastparse.*
 import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers.*
-import pseudoc.Ast.{Algorithm, Assignment, BooleanExpression, Comparison, ComparisonOperator, ForLoop, FunctionCall, IfStatement, IntAddSub, IntAssignment, IntLiteral, IntMultDiv, IntRef, Statement, StringAssignment, StringConcat, StringLiteral, StringRef, VariableDecl, Variables}
+import pseudoc.ast.Ast.{Algorithm, Assignment, BooleanExpression, Comparison, ComparisonOperator, ForLoop, FunctionCall, IfStatement, IntAddSub, IntAssignment, IntLiteral, IntMultDiv, IntRef, Statement, StringAssignment, StringConcat, StringLiteral, StringRef, VariableDecl, Variables}
 
 class PseudoCodeParserTest extends AnyFunSuiteLike:
   def check[A](

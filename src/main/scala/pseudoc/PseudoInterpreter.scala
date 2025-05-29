@@ -1,6 +1,7 @@
 package pseudoc
 
-import pseudoc.Ast._
+import pseudoc.ast.Ast.*
+import pseudoc.ast.{ConsoleOutput, DefaultConsoleOutput}
 
 // Result of evaluation containing both console output and updated variables
 case class EvalResult(console: ConsoleOutput, vars: Map[String, Any])

@@ -1,4 +1,4 @@
-package pseudoc
+package pseudoc.ast
 
 // Immutable console output interface
 trait ConsoleOutput {
@@ -61,6 +61,7 @@ object Ast {
       value: Expression[Int]
   ) extends Assignment
 
+  // TODO use IntExpression, StringExpression: better pattern matching
   sealed trait Expression[A]
   case class StringLiteral(value: String) extends Expression[String]
   case class StringRef(varName: String) extends Expression[String]

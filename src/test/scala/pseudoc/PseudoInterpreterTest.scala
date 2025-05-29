@@ -5,7 +5,8 @@ import org.scalatest.funsuite.AnyFunSuiteLike
 import org.scalatest.matchers.should.Matchers
 import pseudoc.PseudoCodeParser.*
 import pseudoc.PseudoInterpreter.{eval, evalWithVars}
-import pseudoc.Ast._
+import pseudoc.ast.Ast.*
+import pseudoc.ast.TestConsoleOutput
 
 class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   test("for loop"):
