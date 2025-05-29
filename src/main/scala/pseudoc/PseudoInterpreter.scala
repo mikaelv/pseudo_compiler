@@ -1,6 +1,6 @@
 package pseudoc
 
-import pseudoc.ast.Ast.*
+import pseudoc.ast.*
 import pseudoc.ast.{ConsoleOutput, DefaultConsoleOutput}
 
 // Result of evaluation containing both console output and updated variables

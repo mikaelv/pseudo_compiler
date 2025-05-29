@@ -25,83 +25,15 @@ case class TestConsoleOutput(output: String = "") extends ConsoleOutput {
   def getOutput: String = output
 }
 
+case class Algorithm(name: String) extends Ast
+case class Variables(vars: Seq[VariableDecl])
+case class VariableDecl(name: String, tpe: String)
+
+
 sealed trait Ast {}
 
 object Ast {
-  sealed trait Statement
-
-  case class Algorithm(name: String) extends Ast
-  case class Variables(vars: Seq[VariableDecl])
-  case class VariableDecl(name: String, tpe: String)
-  case class ForLoop(
-      variable: String,
-      start: Int,
-      end: Int,
-      statements: Seq[Statement]
-  ) extends Statement
-  
-  case class IfStatement(
-      condition: BooleanExpression,
-      thenBranch: Seq[Statement],
-      elseBranch: Option[Seq[Statement]] = None
-  ) extends Statement
-  
-  // Typed assignment to enforce type safety at compile time
-  sealed trait Assignment extends Statement {
-    def variable: String
-  }
-  
-  case class StringAssignment(
-      variable: String,
-      value: Expression[String]
-  ) extends Assignment
-  
-  case class IntAssignment(
-      variable: String,
-      value: Expression[Int]
-  ) extends Assignment
-
-  // TODO use IntExpression, StringExpression: better pattern matching
-  sealed trait Expression[A]
-  case class StringLiteral(value: String) extends Expression[String]
-  case class StringRef(varName: String) extends Expression[String]
-  case class IntRef(varName: String) extends Expression[Int]
-  case class IntLiteral(value: Int) extends Expression[Int]
-
-  enum MultDivOperator:
-    case Mult, Div
-
-  case class IntMultDiv(base: Expression[Int], ops: Seq[(MultDivOperator, Expression[Int])]) extends Expression[Int]
-  object IntMultDiv {
-    def create(head: Expression[Int], tail: Seq[(String, Expression[Int])]): IntMultDiv =
-      new IntMultDiv(head, tail.map {
-        case ("*", expr) => (MultDivOperator.Mult, expr)
-        case ("/", expr) => (MultDivOperator.Div, expr)
-        case (op, expr) => throw new RuntimeException("Invalid operator: " + op)
-      })
-  }
 
 
-  enum AddSubOperator:
-    case Add, Sub
-  case class IntAddSub(base: IntMultDiv, ops: Seq[(AddSubOperator, IntMultDiv)]) extends Expression[Int]
-  object IntAddSub {
-    def create(head: IntMultDiv, tail: Seq[(String, IntMultDiv)]): IntAddSub =
-      new IntAddSub(head, tail.map {
-        case ("+", expr) => (AddSubOperator.Add, expr)
-        case ("-", expr) => (AddSubOperator.Sub, expr)
-        case (op, expr) => throw new RuntimeException("Invalid operator: " + op)
-      })
-  }
 
-
-  enum ComparisonOperator:
-    case Equal, NotEqual, LessThan, GreaterThan, LessThanEqual, GreaterThanEqual
-  
-  sealed trait BooleanExpression extends Expression[Boolean]
-  case class Comparison(left: Expression[Int], op: ComparisonOperator, right: Expression[Int]) extends BooleanExpression
-
-  case class StringConcat(values: Seq[Expression[_]]) extends Expression[String]
-  case class FunctionCall(fnName: String, args: Seq[Expression[_]])
-      extends Statement
 }

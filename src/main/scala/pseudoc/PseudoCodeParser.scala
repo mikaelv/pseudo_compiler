@@ -2,7 +2,7 @@ package pseudoc
 
 import fastparse.*
 import JavaWhitespace.*
-import pseudoc.ast.Ast.{Algorithm, Assignment, BooleanExpression, Comparison, ComparisonOperator, Expression, ForLoop, FunctionCall, IfStatement, IntAddSub, IntAssignment, IntLiteral, IntMultDiv, IntRef, Statement, StringAssignment, StringConcat, StringLiteral, StringRef, VariableDecl, Variables}
+import pseudoc.ast.*
 
 object PseudoCodeParser {
 
