@@ -4,6 +4,7 @@ import fastparse.*
 import JavaWhitespace.*
 import pseudoc.ast.*
 
+
 object PseudoCodeParser {
 
   def identifier[$: P]: P[String] =
@@ -68,20 +69,6 @@ object PseudoCodeParser {
   ).map(concat => FunctionCallString("print", Seq(concat)))
 
 
-
-  // Expression parsing
-  def numericExpression[$: P]: P[IntExpression] =
-    (integer.map(IntLiteral.apply) | identifier.map(IntRef.apply))
-
-  def parens[$: P]: P[IntAddSub] = P("(" ~/ addSub ~ ")")
-
-  def factor[$: P]: P[IntExpression] = P(numericExpression | parens)
-
-  def divMul[$: P]: P[IntMultDiv] = P(factor ~ (CharIn("*/").! ~/ factor).rep).map(IntMultDiv.create)
-
-  def addSub[$: P]: P[IntAddSub] = P(divMul ~ (CharIn("+\\-").! ~/ divMul).rep).map(IntAddSub.create)
-
-
   def booleanOperator[$: P]: P[ComparisonOperator] = P(
     StringIn("=", "==").map(_ => ComparisonOperator.Equal) |
       StringIn("!=", "<>").map(_ => ComparisonOperator.NotEqual) |
@@ -92,7 +79,7 @@ object PseudoCodeParser {
   )
 
   def comparisonExpr[$: P]: P[BooleanExpression] = P(
-    numericExpression ~ booleanOperator ~ numericExpression
+    IntExpressionParser.intExpression ~ booleanOperator ~ IntExpressionParser.intExpression
   ).map { case (left, op, right) => Comparison(left, op, right) }
 
   def booleanExpression[$: P]: P[BooleanExpression] = comparisonExpr
@@ -111,7 +98,7 @@ object PseudoCodeParser {
   
   // Integer assignment - this should come first in the assignment parser
   def intAssignment[$: P]: P[IntAssignment] = P(
-    identifier ~ "<-" ~ addSub
+    identifier ~ "<-" ~ IntExpressionParser.addSub
   ).map { case (variable, value) => IntAssignment(variable, value) }
   
   // String assignment

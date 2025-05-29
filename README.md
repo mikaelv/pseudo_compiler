@@ -1,6 +1,11 @@
 # Pseudo-code interpreter
 This projet allows to interpret the Efrei pseudo-code, as taught in the module TI102 Algorithms.
 
+## Missing features
+- arrays
+- program structure
+- boolean algebra
+ 
 ## Pseudo-code language
 Here is an example in French an in English, highlighting the syntax of the language :
 
