@@ -2,15 +2,13 @@ package pseudoc.ast
 
 
 
-trait Expression[A]
 
-case class StringLiteral(value: String) extends Expression[String]
+sealed trait IntExpression
 
-case class StringRef(varName: String) extends Expression[String]
 
-case class IntRef(varName: String) extends Expression[Int]
+case class IntRef(varName: String) extends IntExpression
 
-case class IntLiteral(value: Int) extends Expression[Int]
+case class IntLiteral(value: Int) extends IntExpression
 
 
 // TODO use IntExpression, StringExpression: better pattern matching
@@ -18,10 +16,10 @@ case class IntLiteral(value: Int) extends Expression[Int]
 enum MultDivOperator:
   case Mult, Div
 
-case class IntMultDiv(base: Expression[Int], ops: Seq[(MultDivOperator, Expression[Int])]) extends Expression[Int]
+case class IntMultDiv(base: IntExpression, ops: Seq[(MultDivOperator, IntExpression)]) extends IntExpression
 
 object IntMultDiv {
-  def create(head: Expression[Int], tail: Seq[(String, Expression[Int])]): IntMultDiv =
+  def create(head: IntExpression, tail: Seq[(String, IntExpression)]): IntMultDiv =
     new IntMultDiv(head, tail.map {
       case ("*", expr) => (MultDivOperator.Mult, expr)
       case ("/", expr) => (MultDivOperator.Div, expr)
@@ -33,7 +31,7 @@ object IntMultDiv {
 enum AddSubOperator:
   case Add, Sub
 
-case class IntAddSub(base: IntMultDiv, ops: Seq[(AddSubOperator, IntMultDiv)]) extends Expression[Int]
+case class IntAddSub(base: IntMultDiv, ops: Seq[(AddSubOperator, IntMultDiv)]) extends IntExpression
 
 object IntAddSub {
   def create(head: IntMultDiv, tail: Seq[(String, IntMultDiv)]): IntAddSub =

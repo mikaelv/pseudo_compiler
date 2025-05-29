@@ -55,7 +55,7 @@ object PseudoCodeParser {
       .rep(sep = "+")
       .map(StringConcat.apply)
 
-  def print[$: P]: P[FunctionCall] = P(
+  def print[$: P]: P[FunctionCallString] = P(
     StringIn(
       "Ecrire",
       "ecrire",
@@ -65,17 +65,17 @@ object PseudoCodeParser {
       "Print",
       "print"
     ) ~ "(" ~ expressionString ~ ")"
-  ).map(concat => FunctionCall("print", Seq(concat)))
+  ).map(concat => FunctionCallString("print", Seq(concat)))
 
 
 
   // Expression parsing
-  def numericExpression[$: P]: P[Expression[Int]] =
+  def numericExpression[$: P]: P[IntExpression] =
     (integer.map(IntLiteral.apply) | identifier.map(IntRef.apply))
 
   def parens[$: P]: P[IntAddSub] = P("(" ~/ addSub ~ ")")
 
-  def factor[$: P]: P[Expression[Int]] = P(numericExpression | parens)
+  def factor[$: P]: P[IntExpression] = P(numericExpression | parens)
 
   def divMul[$: P]: P[IntMultDiv] = P(factor ~ (CharIn("*/").! ~/ factor).rep).map(IntMultDiv.create)
 

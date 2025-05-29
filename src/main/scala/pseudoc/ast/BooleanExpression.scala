@@ -1,9 +1,9 @@
 package pseudoc.ast
 
 
-sealed trait BooleanExpression extends Expression[Boolean]
+sealed trait BooleanExpression
 
-case class Comparison(left: Expression[Int], op: ComparisonOperator, right: Expression[Int]) extends BooleanExpression
+case class Comparison(left: IntExpression, op: ComparisonOperator, right: IntExpression) extends BooleanExpression
 
 enum ComparisonOperator:
   case Equal, NotEqual, LessThan, GreaterThan, LessThanEqual, GreaterThanEqual

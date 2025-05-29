@@ -118,7 +118,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
       IntAssignment("x", IntLiteral(5)),
       IfStatement(
         Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
-        Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
+        Seq(FunctionCallString("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
         None
       )
     )

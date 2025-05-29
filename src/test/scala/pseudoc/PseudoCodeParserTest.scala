@@ -57,7 +57,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check(
       "Write(a + \"hello\" + b + \"world\")",
       print(_),
-      FunctionCall(
+      FunctionCallString(
         "print",
         Seq(
           StringConcat(
@@ -115,7 +115,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       ifStatement(_),
       IfStatement(
         Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
-        Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
+        Seq(FunctionCallString("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
         None
       )
     )
@@ -126,8 +126,8 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       ifStatement(_),
       IfStatement(
         Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
-        Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
-        Some(Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is not 5")))))))
+        Seq(FunctionCallString("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
+        Some(Seq(FunctionCallString("print", Seq(StringConcat(Seq(StringLiteral("x is not 5")))))))
       )
     )
     
@@ -137,8 +137,8 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       ifStatement(_),
       IfStatement(
         Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
-        Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
-        Some(Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is not 5")))))))
+        Seq(FunctionCallString("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
+        Some(Seq(FunctionCallString("print", Seq(StringConcat(Seq(StringLiteral("x is not 5")))))))
       )
     )
     

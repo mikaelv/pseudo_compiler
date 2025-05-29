@@ -21,13 +21,13 @@ sealed trait Assignment extends Statement {
 
 case class StringAssignment(
     variable: String,
-    value: Expression[String]
+    value: StringExpression
 ) extends Assignment
 
 case class IntAssignment(
     variable: String,
-    value: Expression[Int]
+    value: IntExpression
 ) extends Assignment
 
-case class FunctionCall(fnName: String, args: Seq[Expression[_]])
+case class FunctionCallString(fnName: String, args: Seq[StringExpression])
     extends Statement
