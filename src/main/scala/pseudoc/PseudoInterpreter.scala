@@ -4,30 +4,28 @@ import pseudoc.ast.*
 import pseudoc.ast.{ConsoleOutput, DefaultConsoleOutput}
 
 // Result of evaluation containing both console output and updated variables
-case class EvalResult(console: ConsoleOutput, vars: Map[String, Any])
+case class EvalResult(console: ConsoleOutput, vars: VarMap)
 
 object PseudoInterpreter {
   // For backward compatibility
   def eval(
       stmt: Statement,
-      vars: Map[String, Any],
+      vars: VarMap,
       console: ConsoleOutput = DefaultConsoleOutput()
   ): ConsoleOutput = {
     evalWithVars(stmt, vars, console).console
   }
 
-  type VarMap = Map[String, Any]
-
   // New evaluation method that returns both console output and updated variables
   def evalWithVars(
       stmt: Statement,
-      vars: Map[String, Any],
+      vars: VarMap,
       console: ConsoleOutput = DefaultConsoleOutput()
   ): EvalResult = {
     stmt match {
       case f: ForLoop =>
         val result = (f.start to f.end).foldLeft(EvalResult(console, vars)) { (current, i) =>
-          val loopVars = current.vars + (f.variable -> i)
+          val loopVars = current.vars.store(f.variable, i)
           f.statements.foldLeft(EvalResult(current.console, loopVars)) { (res, s) =>
             evalWithVars(s, res.vars, res.console)
           }
@@ -57,7 +55,7 @@ object PseudoInterpreter {
     }
   }
 
-  def evalBoolExpr(expr: BoolExpression, vars: Map[String, Any]): Boolean = {
+  def evalBoolExpr(expr: BoolExpression, vars: VarMap): Boolean = {
     expr match
       case BoolLiteral(b) => b
 
@@ -83,7 +81,7 @@ object PseudoInterpreter {
   }
 
   // TODO move vars to a class with one Map per type
-  def evalIntExpr(expr: IntExpression, vars: Map[String, Any]): Int =
+  def evalIntExpr(expr: IntExpression, vars: VarMap): Int =
     expr match
       case IntRef(varName)   => vars(varName).asInstanceOf[Int]
       case IntLiteral(value) => value
@@ -101,7 +99,7 @@ object PseudoInterpreter {
             case AddSubOperator.Sub => left - evalIntExpr(right, vars)
         }
 
-  def evalStringExpr(expr: StringExpression, vars: Map[String, Any]): String =
+  def evalStringExpr(expr: StringExpression, vars: VarMap): String =
     expr match
       case StringLiteral(value) => value
       case StringRef(varName)   => vars(varName).toString
@@ -111,24 +109,14 @@ object PseudoInterpreter {
   def evalAssign(assign: Assignment, vars: VarMap): VarMap = {
     // Check if variable exists
     if (!vars.contains(assign.variable))
-      throw new RuntimeException(
-        s"Variable '${assign.variable}' is not declared"
-      )
-
-    // Check if variable is of the right type
-    val tpe = "???" // TODO assign.varType
-    if (!vars(assign.variable).isInstanceOf[assign.varType]) {
-      throw new RuntimeException(
-        s"Type error: Cannot assign $tpe value to non-$tpe variable '${assign.variable}'"
-      )
-    }
+      throw new RuntimeException(s"Variable '${assign.variable}' is not declared")
 
     val value = assign match
       case StringAssignment(_, expr) => evalStringExpr(expr, vars)
       case IntAssignment(_, expr)    => evalIntExpr(expr, vars)
       case BoolAssignment(_, expr)   => evalBoolExpr(expr, vars)
 
-    vars + (assign.variable -> value)
+    vars.store(assign.variable, value)
   }
 
 }

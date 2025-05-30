@@ -14,7 +14,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
         |  Ecrire("Valeur de i: " + i + "\NL")
         |Fin Pour""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, Map.empty, TestConsoleOutput())
+    val console = eval(stmt, VarMap.empty, TestConsoleOutput())
     
     // Assert that output contains expected text
     val expected = (1 to 10).map(i => s"Valeur de i: $i\n").mkString
@@ -26,7 +26,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
         |  Ecrire("x is 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, Map("x" -> 5), TestConsoleOutput())
+    val console = eval(stmt, VarMap("x" -> 5), TestConsoleOutput())
     
     console.getOutput shouldBe "x is 5\n"
     
@@ -36,7 +36,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
         |  Ecrire("x is 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, Map("x" -> 10), TestConsoleOutput())
+    val console = eval(stmt, VarMap("x" -> 10), TestConsoleOutput())
     
     console.getOutput shouldBe ""
     
@@ -48,7 +48,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
         |  Ecrire("x is not 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, Map("x" -> 5), TestConsoleOutput())
+    val console = eval(stmt, VarMap("x" -> 5), TestConsoleOutput())
     
     console.getOutput shouldBe "x is 5\n"
     
@@ -60,7 +60,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
         |  Ecrire("x is not 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, Map("x" -> 10), TestConsoleOutput())
+    val console = eval(stmt, VarMap("x" -> 10), TestConsoleOutput())
     
     console.getOutput shouldBe "x is not 5\n"
     
@@ -76,13 +76,13 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
         |  Ecrire("x is less than or equal to 0\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, Map("x" -> 5), TestConsoleOutput())
+    val console = eval(stmt, VarMap("x" -> 5), TestConsoleOutput())
     
     console.getOutput shouldBe "x is between 0 and 10\n"
     
   test("variable assignment with type checking - compatible types") {
     // String variable
-    val vars = Map("message" -> "")
+    val vars = VarMap("message" -> "")
     val assignment = StringAssignment("message", StringLiteral("Hello"))
     val result = evalWithVars(assignment, vars, TestConsoleOutput())
     
@@ -90,7 +90,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     result.console.getOutput should be("")
     
     // Integer variable with integer literal
-    val intVars = Map("counter" -> 0)
+    val intVars = VarMap("counter" -> 0)
     val intAssignment = IntAssignment("counter", IntLiteral(42))
     val intResult = evalWithVars(intAssignment, intVars, TestConsoleOutput())
     
@@ -100,7 +100,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   
   test("variable assignment with type checking - incompatible types") {
     // Runtime type check for variable types
-    val vars = Map("counter" -> "")  // counter is a string, not an int
+    val vars = VarMap("counter" -> "")  // counter is a string, not an int
     val assignment = IntAssignment("counter", IntLiteral(42))
     
     val exception = intercept[RuntimeException] {
@@ -108,12 +108,12 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     }
     
     exception.getMessage should include("Type error")
-    exception.getMessage should include("integer")
+    exception.getMessage should include("Integer")
     exception.getMessage should include("counter")
   }
   
   test("variable assignment updates variable state for subsequent statements") {
-    val vars = Map("x" -> 0)
+    val vars = VarMap("x" -> 0)
     val statements = Seq(
       IntAssignment("x", IntLiteral(5)),
       IfStatement(
@@ -137,7 +137,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     val assignmentCode = "x <- 42"
     val Parsed.Success(assignmentStmt, _) = parse(assignmentCode, intAssignment(_))
     
-    val vars = Map("x" -> 0)
+    val vars = VarMap("x" -> 0)
     val console = TestConsoleOutput()
     
     val result = evalWithVars(assignmentStmt, vars, console)
@@ -150,7 +150,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     val assignmentCode = "message <- \"Hello\""
     val Parsed.Success(assignmentStmt, _) = parse(assignmentCode, stringAssignment(_))
     
-    val vars = Map("message" -> "")
+    val vars = VarMap("message" -> "")
     val console = TestConsoleOutput()
     
     val result = evalWithVars(assignmentStmt, vars, console)
@@ -171,7 +171,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     val Parsed.Success(ifStmt, _) = parse(ifCode, ifStatement(_))
     
     // Execute them in sequence
-    val vars = Map("x" -> 0)
+    val vars = VarMap("x" -> 0)
     val console = TestConsoleOutput()
     
     val result1 = evalWithVars(assignStmt, vars, console)
@@ -184,15 +184,15 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   test("arithmetic operations") {
     val code = "x <- 2 + 3*(x+3) - y"
     val Parsed.Success(stmt, _) = parse(code, assignment(_))
-    val result = evalWithVars(stmt, Map("x" -> 2, "y" -> 4)).vars
-    result should be(Map("x" -> 13, "y" -> 4))
+    val result = evalWithVars(stmt, VarMap("x" -> 2, "y" -> 4)).vars
+    result should be(VarMap("x" -> 13, "y" -> 4))
   }
 
   test("boolean operations") {
     val code = "x <- false or true and (x or false)"
     val Parsed.Success(stmt, _) = parse(code, assignment(_))
-    var result = evalWithVars(stmt, Map("x" -> true)).vars
-    result should be(Map("x" -> true))
-    result = evalWithVars(stmt, Map("x" -> false)).vars
-    result should be(Map("x" -> false))
+    var result = evalWithVars(stmt, VarMap("x" -> true)).vars
+    result should be(VarMap("x" -> true))
+    result = evalWithVars(stmt, VarMap("x" -> false)).vars
+    result should be(VarMap("x" -> false))
   }
