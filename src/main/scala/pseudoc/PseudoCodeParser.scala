@@ -2,13 +2,14 @@ package pseudoc
 
 import fastparse.*
 import JavaWhitespace.*
+import pseudoc.IntExpressionParser.integer
 import pseudoc.ast.*
 
 
 object PseudoCodeParser {
 
   def identifier[$: P]: P[String] =
-    (CharIn("a-zA-Z") ~ CharIn("a-zA-Z_0-9").rep).!
+    (CharIn("a-zA-Z") ~~ CharIn("a-zA-Z_0-9").rep).!
 
   def algo[$: P]: P[Algorithm] =
     P("Algorithme" ~ ":" ~ identifier).map(Algorithm.apply)
@@ -35,8 +36,6 @@ object PseudoCodeParser {
     "Variables" ~ ":" ~ variableDecl.rep(sep = ",")
   ).map(Variables.apply)
 
-  def digits[$: P]: P[Unit] = P(CharsWhileIn("0-9"))
-  def integer[$: P]: P[Int] = digits.!.map(_.toInt)
 
   def forLoop[$: P] = P(
     StringIn("Pour", "For") ~ identifier ~ "<-" ~
@@ -78,11 +77,11 @@ object PseudoCodeParser {
       StringIn(">").map(_ => ComparisonOperator.GreaterThan)
   )
 
-  def comparisonExpr[$: P]: P[BooleanExpression] = P(
+  def comparisonExpr[$: P]: P[BoolExpression] = P(
     IntExpressionParser.intExpression ~ booleanOperator ~ IntExpressionParser.intExpression
   ).map { case (left, op, right) => Comparison(left, op, right) }
 
-  def booleanExpression[$: P]: P[BooleanExpression] = comparisonExpr
+  def booleanExpression[$: P]: P[BoolExpression] = comparisonExpr
 
   def ifStatement[$: P]: P[IfStatement] = P(
     StringIn("Si", "If") ~ booleanExpression ~
@@ -105,9 +104,14 @@ object PseudoCodeParser {
   def stringAssignment[$: P]: P[StringAssignment] = P(
     identifier ~ "<-" ~ expressionString
   ).map { case (variable, value) => StringAssignment(variable, value) }
-  
+
+  def boolAssignment[$: P]: P[BoolAssignment] = P(
+    identifier ~ "<-" ~ BooleanExpressionParser.or
+  ).map { case (variable, value) => BoolAssignment(variable, value) }
+
+
   // Combined assignment - try int assignment first to avoid ambiguity
-  def assignment[$: P]: P[Assignment] = intAssignment | stringAssignment
+  def assignment[$: P]: P[Assignment] = boolAssignment | intAssignment | stringAssignment
 
   def statement[$: P]: P[Statement] = forLoop | ifStatement | print | assignment
 

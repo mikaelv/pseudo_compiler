@@ -181,9 +181,18 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     result2.vars("x") should be(42)
   }
 
-  test("arithmetic operation") {
+  test("arithmetic operations") {
     val code = "x <- 2 + 3*(x+3) - y"
     val Parsed.Success(stmt, _) = parse(code, assignment(_))
     val result = evalWithVars(stmt, Map("x" -> 2, "y" -> 4)).vars
     result should be(Map("x" -> 13, "y" -> 4))
+  }
+
+  test("boolean operations") {
+    val code = "x <- false or true and (x or false)"
+    val Parsed.Success(stmt, _) = parse(code, assignment(_))
+    var result = evalWithVars(stmt, Map("x" -> true)).vars
+    result should be(Map("x" -> true))
+    result = evalWithVars(stmt, Map("x" -> false)).vars
+    result should be(Map("x" -> false))
   }

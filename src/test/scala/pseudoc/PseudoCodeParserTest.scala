@@ -71,94 +71,163 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
         )
       )
     )
-    
+
   test("comparison expression"):
     check(
       "x = 5",
       comparisonExpr(_),
       Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5))
     )
-    
+
     check(
       "x != 5",
       comparisonExpr(_),
       Comparison(IntRef("x"), ComparisonOperator.NotEqual, IntLiteral(5))
     )
-    
+
     check(
       "x < 5",
       comparisonExpr(_),
       Comparison(IntRef("x"), ComparisonOperator.LessThan, IntLiteral(5))
     )
-    
+
     check(
       "x > 5",
       comparisonExpr(_),
       Comparison(IntRef("x"), ComparisonOperator.GreaterThan, IntLiteral(5))
     )
-    
+
     check(
       "x <= 5",
       comparisonExpr(_),
       Comparison(IntRef("x"), ComparisonOperator.LessThanEqual, IntLiteral(5))
     )
-    
+
     check(
       "x >= 5",
       comparisonExpr(_),
-      Comparison(IntRef("x"), ComparisonOperator.GreaterThanEqual, IntLiteral(5))
+      Comparison(
+        IntRef("x"),
+        ComparisonOperator.GreaterThanEqual,
+        IntLiteral(5)
+      )
     )
-    
+
   test("if statement - no else"):
     check(
       "Si x = 5 Alors\nEcrire(\"x is 5\")\nFin Si",
       ifStatement(_),
       IfStatement(
         Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
-        Seq(FunctionCallString("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
+        Seq(
+          FunctionCallString(
+            "print",
+            Seq(StringConcat(Seq(StringLiteral("x is 5"))))
+          )
+        ),
         None
       )
     )
-    
+
   test("if statement - with else"):
     check(
       "Si x = 5 Alors\nEcrire(\"x is 5\")\nSinon\nEcrire(\"x is not 5\")\nFin Si",
       ifStatement(_),
       IfStatement(
         Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
-        Seq(FunctionCallString("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
-        Some(Seq(FunctionCallString("print", Seq(StringConcat(Seq(StringLiteral("x is not 5")))))))
+        Seq(
+          FunctionCallString(
+            "print",
+            Seq(StringConcat(Seq(StringLiteral("x is 5"))))
+          )
+        ),
+        Some(
+          Seq(
+            FunctionCallString(
+              "print",
+              Seq(StringConcat(Seq(StringLiteral("x is not 5"))))
+            )
+          )
+        )
       )
     )
-    
+
   test("if statement - english syntax"):
     check(
       "If x = 5 Then\nPrint(\"x is 5\")\nElse\nPrint(\"x is not 5\")\nEnd If",
       ifStatement(_),
       IfStatement(
         Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
-        Seq(FunctionCallString("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
-        Some(Seq(FunctionCallString("print", Seq(StringConcat(Seq(StringLiteral("x is not 5")))))))
+        Seq(
+          FunctionCallString(
+            "print",
+            Seq(StringConcat(Seq(StringLiteral("x is 5"))))
+          )
+        ),
+        Some(
+          Seq(
+            FunctionCallString(
+              "print",
+              Seq(StringConcat(Seq(StringLiteral("x is not 5"))))
+            )
+          )
+        )
       )
     )
-    
+
   test("variable assignment with integer"):
     check(
       "x <- 42",
       assignment(_),
-      IntAssignment("x", IntAddSub(IntMultDiv(IntLiteral(42), Seq.empty), Seq.empty))
+      IntAssignment(
+        "x",
+        IntAddSub(IntMultDiv(IntLiteral(42), Seq.empty), Seq.empty)
+      )
     )
-    
+
   test("variable assignment with string"):
     check(
       "message <- \"Hello, world!\"",
       assignment(_),
-      StringAssignment("message", StringConcat(Seq(StringLiteral("Hello, world!"))))
+      StringAssignment(
+        "message",
+        StringConcat(Seq(StringLiteral("Hello, world!")))
+      )
     )
-    
+
   test("variable assignment with concatenation"):
     check(
       "greeting <- \"Hello, \" + name",
       assignment(_),
-      StringAssignment("greeting", StringConcat(Seq(StringLiteral("Hello, "), StringRef("name"))))
+      StringAssignment(
+        "greeting",
+        StringConcat(Seq(StringLiteral("Hello, "), StringRef("name")))
+      )
     )
+
+  test("boolean expression"):
+    check(
+      "true or x",
+      BooleanExpressionParser.or(_),
+      BoolOperations(BoolLiteral(true), (BooleanOperator.Or, BoolRef("x")))
+    )
+
+    check(
+      "x or true",
+      BooleanExpressionParser.or(_),
+      BoolOperations(BoolRef("x"), (BooleanOperator.Or, BoolLiteral(true)))
+    )
+
+    check(
+      "false or true",
+      BooleanExpressionParser.or(_),
+      BoolOperations(BoolLiteral(false), (BooleanOperator.Or, BoolLiteral(true)))
+    )
+
+
+    check("false or true and (x or false)",
+      BooleanExpressionParser.or(_),
+      BoolOperations(BoolLiteral(false), (BooleanOperator.Or,
+        BoolOperations(BoolLiteral(true), (BooleanOperator.And, BoolOperations(BoolRef("x"), (BooleanOperator.Or, BoolLiteral(false)))))))
+    )
+

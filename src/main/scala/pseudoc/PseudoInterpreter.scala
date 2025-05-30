@@ -16,6 +16,8 @@ object PseudoInterpreter {
     evalWithVars(stmt, vars, console).console
   }
 
+  type VarMap = Map[String, Any]
+
   // New evaluation method that returns both console output and updated variables
   def evalWithVars(
       stmt: Statement,
@@ -24,13 +26,11 @@ object PseudoInterpreter {
   ): EvalResult = {
     stmt match {
       case f: ForLoop =>
-        val result = (f.start to f.end).foldLeft(EvalResult(console, vars)) {
-          (current, i) =>
-            val loopVars = current.vars + (f.variable -> i)
-            f.statements.foldLeft(EvalResult(current.console, loopVars)) {
-              (res, s) =>
-                evalWithVars(s, res.vars, res.console)
-            }
+        val result = (f.start to f.end).foldLeft(EvalResult(console, vars)) { (current, i) =>
+          val loopVars = current.vars + (f.variable -> i)
+          f.statements.foldLeft(EvalResult(current.console, loopVars)) { (res, s) =>
+            evalWithVars(s, res.vars, res.console)
+          }
         }
         result
 
@@ -41,66 +41,38 @@ object PseudoInterpreter {
       case f: FunctionCallString => ???
 
       case ifStmt: IfStatement =>
-        if (evalBoolExpr(ifStmt.condition, vars)) {
+        if (evalBoolExpr(ifStmt.condition, vars))
           ifStmt.thenBranch.foldLeft(EvalResult(console, vars)) { (res, s) =>
             evalWithVars(s, res.vars, res.console)
           }
-        } else if (ifStmt.elseBranch.isDefined) {
-          ifStmt.elseBranch.get.foldLeft(EvalResult(console, vars)) {
-            (res, s) =>
-              evalWithVars(s, res.vars, res.console)
+        else if (ifStmt.elseBranch.isDefined)
+          ifStmt.elseBranch.get.foldLeft(EvalResult(console, vars)) { (res, s) =>
+            evalWithVars(s, res.vars, res.console)
           }
-        } else {
+        else
           EvalResult(console, vars)
-        }
 
-      case strAssign: StringAssignment =>
-        // Check if variable exists
-        if (!vars.contains(strAssign.variable)) {
-          throw new RuntimeException(
-            s"Variable '${strAssign.variable}' is not declared"
-          )
-        }
+      case assign: Assignment => EvalResult(console, evalAssign(assign, vars))
 
-        // Check if variable is a string type
-        if (!vars(strAssign.variable).isInstanceOf[String]) {
-          throw new RuntimeException(
-            s"Type error: Cannot assign string value to non-string variable '${strAssign.variable}'"
-          )
-        }
-
-        // Evaluate the string expression
-        val stringValue = evalStringExpr(strAssign.value, vars)
-
-        // Return with updated variable map
-        EvalResult(console, vars + (strAssign.variable -> stringValue))
-
-      case intAssign: IntAssignment =>
-        // Check if variable exists
-        if (!vars.contains(intAssign.variable)) {
-          throw new RuntimeException(
-            s"Variable '${intAssign.variable}' is not declared"
-          )
-        }
-
-        // Check if variable is an int type
-        if (!vars(intAssign.variable).isInstanceOf[Int]) {
-          throw new RuntimeException(
-            s"Type error: Cannot assign integer value to non-integer variable '${intAssign.variable}'"
-          )
-        }
-
-        val intValue = evalIntExpr(intAssign.value, vars)
-        EvalResult(console, vars + (intAssign.variable -> intValue))
     }
   }
 
-  def evalBoolExpr(expr: BooleanExpression, vars: Map[String, Any]): Boolean = {
+  def evalBoolExpr(expr: BoolExpression, vars: Map[String, Any]): Boolean = {
     expr match
+      case BoolLiteral(b) => b
+
+      case BoolOperations(base, ops: _*) =>
+        ops.foldLeft(evalBoolExpr(base, vars)):
+          case (left, (op, right)) =>
+            op match
+              case BooleanOperator.And => left && evalBoolExpr(right, vars)
+              case BooleanOperator.Or  => left || evalBoolExpr(right, vars)
+
+      case BoolRef(varName) => vars(varName).asInstanceOf[Boolean]
+
       case Comparison(left, op, right) =>
         val leftVal = evalIntExpr(left, vars)
         val rightVal = evalIntExpr(right, vars)
-
         op match
           case ComparisonOperator.Equal            => leftVal == rightVal
           case ComparisonOperator.NotEqual         => leftVal != rightVal
@@ -135,5 +107,28 @@ object PseudoInterpreter {
       case StringRef(varName)   => vars(varName).toString
       case StringConcat(values) =>
         values.map(e => evalStringExpr(e, vars)).mkString
+
+  def evalAssign(assign: Assignment, vars: VarMap): VarMap = {
+    // Check if variable exists
+    if (!vars.contains(assign.variable))
+      throw new RuntimeException(
+        s"Variable '${assign.variable}' is not declared"
+      )
+
+    // Check if variable is of the right type
+    val tpe = "???" // TODO assign.varType
+    if (!vars(assign.variable).isInstanceOf[assign.varType]) {
+      throw new RuntimeException(
+        s"Type error: Cannot assign $tpe value to non-$tpe variable '${assign.variable}'"
+      )
+    }
+
+    val value = assign match
+      case StringAssignment(_, expr) => evalStringExpr(expr, vars)
+      case IntAssignment(_, expr)    => evalIntExpr(expr, vars)
+      case BoolAssignment(_, expr)   => evalBoolExpr(expr, vars)
+
+    vars + (assign.variable -> value)
+  }
 
 }
