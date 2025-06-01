@@ -71,9 +71,9 @@ object PseudoCodeParser {
 
 
   def ifStatement[$: P]: P[IfStatement] = P(
-    StringIn("Si", "If") ~/ comparisonExpr ~
-      StringIn("Alors", "Then") ~/ statement.rep ~
-      (StringIn("Sinon", "Else") ~/ statement.rep).? ~
+    StringIn("Si", "If") ~ comparisonExpr ~
+      StringIn("Alors", "Then") ~ statement.rep ~
+      (StringIn("Sinon", "Else") ~ statement.rep).? ~
       StringIn("Fin Si", "End If")
   ).map {
     case (condition, thenBranch, Some(elseBranch)) =>

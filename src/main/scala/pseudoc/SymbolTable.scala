@@ -3,7 +3,7 @@ package pseudoc
 /**
  * Maintains type information for static type checking during parsing.
  */
-case class SymbolTable(types: Map[String, Class[_]] = Map.empty) {
+case class SymbolTable(types: Map[String, Class[_]] = Map.empty) { // TODO use a sealed trait instead of Class[_]
   /**
    * Get the type of a variable if it exists in the symbol table
    */
