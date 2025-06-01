@@ -30,5 +30,20 @@ object BooleanExpressionParser {
   def booleanLiteral[$: P]: P[BoolLiteral] = P(boolTrue | boolFalse)
 
   def booleanExpression[$: P]: P[BoolExpression] =
-    (booleanLiteral | identifier.map(BoolRef.apply))
+    (booleanLiteral | identifier.map(BoolRef.apply) | comparisonExpr)
+
+  def booleanOperator[$: P]: P[ComparisonOperator] = P(
+    StringIn("=", "==").map(_ => ComparisonOperator.Equal) |
+      StringIn("!=", "<>").map(_ => ComparisonOperator.NotEqual) |
+      StringIn("≤", "<=").map(_ => ComparisonOperator.LessThanEqual) |
+      StringIn("≥", ">=").map(_ => ComparisonOperator.GreaterThanEqual) |
+      StringIn("<").map(_ => ComparisonOperator.LessThan) |
+      StringIn(">").map(_ => ComparisonOperator.GreaterThan)
+  )
+
+  def comparisonExpr[$: P]: P[BoolExpression] = P(
+    IntExpressionParser.intExpression ~ booleanOperator ~ IntExpressionParser.intExpression
+  ).map { case (left, op, right) => Comparison(left, op, right) }
+
+
 }

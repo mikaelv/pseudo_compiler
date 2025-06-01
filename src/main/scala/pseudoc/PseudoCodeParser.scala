@@ -2,6 +2,7 @@ package pseudoc
 
 import fastparse.*
 import JavaWhitespace.*
+import pseudoc.BooleanExpressionParser.booleanExpression
 import pseudoc.IntExpressionParser.integer
 import pseudoc.ast.*
 
@@ -68,25 +69,11 @@ object PseudoCodeParser {
   ).map(concat => FunctionCallString("print", Seq(concat)))
 
 
-  def booleanOperator[$: P]: P[ComparisonOperator] = P(
-    StringIn("=", "==").map(_ => ComparisonOperator.Equal) |
-      StringIn("!=", "<>").map(_ => ComparisonOperator.NotEqual) |
-      StringIn("≤", "<=").map(_ => ComparisonOperator.LessThanEqual) |
-      StringIn("≥", ">=").map(_ => ComparisonOperator.GreaterThanEqual) |
-      StringIn("<").map(_ => ComparisonOperator.LessThan) |
-      StringIn(">").map(_ => ComparisonOperator.GreaterThan)
-  )
-
-  def comparisonExpr[$: P]: P[BoolExpression] = P(
-    IntExpressionParser.intExpression ~ booleanOperator ~ IntExpressionParser.intExpression
-  ).map { case (left, op, right) => Comparison(left, op, right) }
-
-  def booleanExpression[$: P]: P[BoolExpression] = comparisonExpr
 
   def ifStatement[$: P]: P[IfStatement] = P(
-    StringIn("Si", "If") ~ booleanExpression ~
-      StringIn("Alors", "Then") ~ statement.rep ~
-      (StringIn("Sinon", "Else") ~ statement.rep).? ~
+    StringIn("Si", "If") ~/ booleanExpression ~
+      StringIn("Alors", "Then") ~/ statement.rep ~
+      (StringIn("Sinon", "Else") ~/ statement.rep).? ~
       StringIn("Fin Si", "End If")
   ).map {
     case (condition, thenBranch, Some(elseBranch)) =>
@@ -111,8 +98,8 @@ object PseudoCodeParser {
 
 
   // Combined assignment - try int assignment first to avoid ambiguity
-  def assignment[$: P]: P[Assignment] = boolAssignment | intAssignment | stringAssignment
+  def assignment[$: P]: P[Assignment] = (boolAssignment | intAssignment | stringAssignment).log
 
-  def statement[$: P]: P[Statement] = forLoop | ifStatement | print | assignment
+  def statement[$: P]: P[Statement] = (forLoop | ifStatement | print | assignment).log
 
 }

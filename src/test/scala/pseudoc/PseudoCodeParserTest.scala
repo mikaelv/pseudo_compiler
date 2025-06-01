@@ -5,6 +5,7 @@ import PseudoCodeParser.*
 import fastparse.*
 import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers.*
+import pseudoc.BooleanExpressionParser.comparisonExpr
 import pseudoc.ast.*
 
 class PseudoCodeParserTest extends AnyFunSuiteLike:
