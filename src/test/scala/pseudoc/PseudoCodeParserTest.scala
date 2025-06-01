@@ -41,9 +41,9 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       variables(_),
       Variables(
         Seq(
-          VariableDecl("chaine1", "string"),
-          VariableDecl("chaine2", "string"),
-          VariableDecl("chaine3", "string")
+          VariableDecl("chaine1", PseudoType.StringType),
+          VariableDecl("chaine2", PseudoType.StringType),
+          VariableDecl("chaine3", PseudoType.StringType)
         )
       )
     )

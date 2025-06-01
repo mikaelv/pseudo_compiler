@@ -4,6 +4,7 @@ import org.scalatest._
 import org.scalatest.matchers.should._
 import org.scalatest.wordspec._
 import pseudoc.ast._
+import pseudoc.PseudoType
 
 class TypeCheckerTest extends AnyWordSpec with Matchers {
 
@@ -12,9 +13,9 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
       // Create a program with correct variable usage
       val algo = Algorithm("Test")
       val vars = Variables(Seq(
-        VariableDecl("stringVar", "string"),
-        VariableDecl("intVar", "int"),
-        VariableDecl("boolVar", "boolean")
+        VariableDecl("stringVar", PseudoType.StringType),
+        VariableDecl("intVar", PseudoType.IntType),
+        VariableDecl("boolVar", PseudoType.BoolType)
       ))
       
       val statements = Seq(
@@ -47,7 +48,7 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
     "detect undefined variables" in {
       val algo = Algorithm("Test")
       val vars = Variables(Seq(
-        VariableDecl("knownVar", "string")
+        VariableDecl("knownVar", PseudoType.StringType)
       ))
       
       val statements = Seq(
@@ -67,9 +68,9 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
     "detect type mismatches in assignments" in {
       val algo = Algorithm("Test")
       val vars = Variables(Seq(
-        VariableDecl("stringVar", "string"),
-        VariableDecl("intVar", "int"),
-        VariableDecl("boolVar", "boolean")
+        VariableDecl("stringVar", PseudoType.StringType),
+        VariableDecl("intVar", PseudoType.IntType),
+        VariableDecl("boolVar", PseudoType.BoolType)
       ))
       
       val statements = Seq(
@@ -88,8 +89,8 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
     "detect type mismatches in expressions" in {
       val algo = Algorithm("Test")
       val vars = Variables(Seq(
-        VariableDecl("stringVar", "string"),
-        VariableDecl("intVar", "int")
+        VariableDecl("stringVar", PseudoType.StringType),
+        VariableDecl("intVar", PseudoType.IntType)
       ))
       
       val statements = Seq(
@@ -112,8 +113,8 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
       // Create a program with string-int concatenation
       val algo = Algorithm("TestAlgo")
       val vars = Variables(Seq(
-        VariableDecl("x", "int"),
-        VariableDecl("message", "string")
+        VariableDecl("x", PseudoType.IntType),
+        VariableDecl("message", PseudoType.StringType)
       ))
       
       val statements = Seq(
@@ -137,9 +138,9 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
       // Create a program directly instead of parsing
       val algo = Algorithm("TestAlgo")
       val vars = Variables(Seq(
-        VariableDecl("x", "int"),
-        VariableDecl("message", "string"),
-        VariableDecl("isValid", "boolean")
+        VariableDecl("x", PseudoType.IntType),
+        VariableDecl("message", PseudoType.StringType),
+        VariableDecl("isValid", PseudoType.BoolType)
       ))
       
       val statements = Seq(
@@ -163,9 +164,9 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
       // Create a program directly with a type error
       val algo = Algorithm("TestAlgo")
       val vars = Variables(Seq(
-        VariableDecl("x", "int"),
-        VariableDecl("message", "string"),
-        VariableDecl("isValid", "boolean")
+        VariableDecl("x", PseudoType.IntType),
+        VariableDecl("message", PseudoType.StringType),
+        VariableDecl("isValid", PseudoType.BoolType)
       ))
       
       val statements = Seq(

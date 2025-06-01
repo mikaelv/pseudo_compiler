@@ -3,7 +3,8 @@
     "allow": [
       "Bash(sbt test)",
       "Bash(grep:*)",
-      "Bash(sbt:*)"
+      "Bash(sbt:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }

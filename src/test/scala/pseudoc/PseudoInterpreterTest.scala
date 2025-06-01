@@ -182,9 +182,13 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   }
 
   test("assign another variable") {
-    val code = "s1 <- s0"
-    parse(code, statement(_)) match {
-      case Parsed.Success(stmt, index) =>
+    // Use exact format that works in PseudoCodeParserTest
+    val code = "Algorithme: test\nVariables:\ns0: string, s1: string\ns1 <- s0"
+    
+    parse(code, programWithContext(_)) match {
+      case Parsed.Success(program, index) =>
+        // Extract the assignment statement
+        val stmt = program.statements.head
         val vars = VarMap("s0" -> "hello", "s1" -> "" )
         val result = evalWithVars(stmt, vars)
         result.vars("s1") should be("hello")
@@ -194,22 +198,29 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   }
 
   test("multiple assignments with different types") {
+    // Create a complete program with Variables section for context-aware parsing
     val code =
-      """Si Vrai Alors
+      """Algorithme: test
+        |Variables:
+        |s0: string, s1: string, i0: entier, i1: entier, b0: booléen, b1: booléen
+        |Si Vrai Alors
         |  s1 <- "hello"
         |  i1 <- 3
         |  b1 <- true
         |Fin Si""".stripMargin
-    parse(code, ifStatement(_)) match {
-      case Parsed.Success(stmt, index) =>
-        val vars = VarMap("s0" -> "hello", "i0" -> 12, "b0" -> true)
+    
+    parse(code, programWithContext(_)) match {
+      case Parsed.Success(program, index) =>
+        // Extract the if statement
+        val stmt = program.statements.head
+        val vars = VarMap("s0" -> "hello", "s1" -> "", "i0" -> 12, "i1" -> 0, "b0" -> true, "b1" -> false)
         val result = evalWithVars(stmt, vars)
         result.vars("s1") should be("hello")
+        result.vars("i1") should be(3)
+        result.vars("b1") shouldBe true
       case Parsed.Failure(stack, idx, extra) =>
         fail(extra.trace().msg)
     }
-
-
   }
 
   test("arithmetic operations") {
@@ -220,10 +231,22 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   }
 
   test("boolean operations") {
-    val code = "x <- false or true and (x or false)"
-    val Parsed.Success(stmt, _) = parse(code, assignment(_))
-    var result = evalWithVars(stmt, VarMap("x" -> true)).vars
-    result should be(VarMap("x" -> true))
-    result = evalWithVars(stmt, VarMap("x" -> false)).vars
-    result should be(VarMap("x" -> false))
+    // Create a complete program with Variables section for context-aware parsing
+    val code = 
+      """Algorithme: test
+        |Variables:
+        |x: booléen
+        |x <- false or true and (x or false)""".stripMargin
+    
+    parse(code, programWithContext(_)) match {
+      case Parsed.Success(program, index) =>
+        // Extract the assignment statement
+        val stmt = program.statements.head
+        var result = evalWithVars(stmt, VarMap("x" -> true)).vars
+        result should be(VarMap("x" -> true))
+        result = evalWithVars(stmt, VarMap("x" -> false)).vars
+        result should be(VarMap("x" -> false))
+      case Parsed.Failure(stack, idx, extra) =>
+        fail(extra.trace().msg)
+    }
   }

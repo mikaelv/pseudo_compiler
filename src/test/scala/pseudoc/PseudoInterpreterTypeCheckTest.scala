@@ -4,6 +4,7 @@ import org.scalatest._
 import org.scalatest.matchers.should._
 import org.scalatest.wordspec._
 import pseudoc.ast._
+import pseudoc.PseudoType
 
 class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
 
@@ -12,8 +13,8 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       // Create a simple program for testing
       val algo = Algorithm("TestAlgo")
       val vars = Variables(Seq(
-        VariableDecl("x", "int"),
-        VariableDecl("message", "string")
+        VariableDecl("x", PseudoType.IntType),
+        VariableDecl("message", PseudoType.StringType)
       ))
       
       val statements = Seq(
@@ -68,8 +69,8 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       // Create a program with a type error
       val algo = Algorithm("TestAlgo")
       val vars = Variables(Seq(
-        VariableDecl("x", "int"),
-        VariableDecl("message", "string")
+        VariableDecl("x", PseudoType.IntType),
+        VariableDecl("message", PseudoType.StringType)
       ))
       
       val statements = Seq(
@@ -90,9 +91,9 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       // Create a program with complex but type-correct operations
       val algo = Algorithm("ComplexTest")
       val vars = Variables(Seq(
-        VariableDecl("sum", "int"),
-        VariableDecl("flag", "boolean"),
-        VariableDecl("message", "string")
+        VariableDecl("sum", PseudoType.IntType),
+        VariableDecl("flag", PseudoType.BoolType),
+        VariableDecl("message", PseudoType.StringType)
       ))
       
       val statements = Seq(
@@ -147,8 +148,8 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       // Create a program with an invalid comparison
       val algo = Algorithm("ConditionTest")
       val vars = Variables(Seq(
-        VariableDecl("x", "int"),
-        VariableDecl("y", "string")
+        VariableDecl("x", PseudoType.IntType),
+        VariableDecl("y", PseudoType.StringType)
       ))
       
       val statements = Seq(
@@ -177,9 +178,9 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       // Create a program with correct variable initializations
       val algo = Algorithm("VarInitTest")
       val vars = Variables(Seq(
-        VariableDecl("a", "int"),
-        VariableDecl("b", "string"),
-        VariableDecl("c", "boolean")
+        VariableDecl("a", PseudoType.IntType),
+        VariableDecl("b", PseudoType.StringType),
+        VariableDecl("c", PseudoType.BoolType)
       ))
       
       val statements = Seq(
