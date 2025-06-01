@@ -3,6 +3,7 @@ package pseudoc
 import org.scalatest._
 import org.scalatest.matchers.should._
 import org.scalatest.wordspec._
+import pseudoc.PseudoType
 
 class SymbolTableTest extends AnyWordSpec with Matchers {
 
@@ -13,9 +14,9 @@ class SymbolTableTest extends AnyWordSpec with Matchers {
         .addVariable("intVar", classOf[Int])
         .addVariable("boolVar", classOf[Boolean])
       
-      symbolTable.getType("strVar") shouldBe Some(classOf[String])
-      symbolTable.getType("intVar") shouldBe Some(classOf[Int])
-      symbolTable.getType("boolVar") shouldBe Some(classOf[Boolean])
+      symbolTable.getType("strVar") shouldBe Some(PseudoType.StringType)
+      symbolTable.getType("intVar") shouldBe Some(PseudoType.IntType)
+      symbolTable.getType("boolVar") shouldBe Some(PseudoType.BoolType)
       symbolTable.getType("unknownVar") shouldBe None
     }
     
@@ -24,24 +25,24 @@ class SymbolTableTest extends AnyWordSpec with Matchers {
         .addVariable("strVar", classOf[String])
         .addVariable("intVar", classOf[Int])
       
-      symbolTable.checkType("strVar", classOf[String]) shouldBe true
-      symbolTable.checkType("intVar", classOf[Int]) shouldBe true
-      symbolTable.checkType("strVar", classOf[Int]) shouldBe false
-      symbolTable.checkType("intVar", classOf[String]) shouldBe false
-      symbolTable.checkType("unknownVar", classOf[String]) shouldBe false
+      symbolTable.checkType("strVar", PseudoType.StringType) shouldBe true
+      symbolTable.checkType("intVar", PseudoType.IntType) shouldBe true
+      symbolTable.checkType("strVar", PseudoType.IntType) shouldBe false
+      symbolTable.checkType("intVar", PseudoType.StringType) shouldBe false
+      symbolTable.checkType("unknownVar", PseudoType.StringType) shouldBe false
     }
     
     "update variable types" in {
       val symbolTable = SymbolTable()
         .addVariable("testVar", classOf[String])
       
-      symbolTable.getType("testVar") shouldBe Some(classOf[String])
+      symbolTable.getType("testVar") shouldBe Some(PseudoType.StringType)
       
       val updatedTable = symbolTable.addVariable("testVar", classOf[Int])
-      updatedTable.getType("testVar") shouldBe Some(classOf[Int])
+      updatedTable.getType("testVar") shouldBe Some(PseudoType.IntType)
       
       // Original table should be unchanged (immutability)
-      symbolTable.getType("testVar") shouldBe Some(classOf[String])
+      symbolTable.getType("testVar") shouldBe Some(PseudoType.StringType)
     }
     
     "verify variable types with detailed error messages" in {
@@ -50,17 +51,17 @@ class SymbolTableTest extends AnyWordSpec with Matchers {
         .addVariable("intVar", classOf[Int])
       
       // Successful check
-      symbolTable.checkVariableForType("strVar", classOf[String]) shouldBe Right(classOf[String])
+      symbolTable.checkVariableForType("strVar", PseudoType.StringType) shouldBe Right(PseudoType.StringType)
       
       // Type mismatch
-      val mismatchResult = symbolTable.checkVariableForType("strVar", classOf[Int])
+      val mismatchResult = symbolTable.checkVariableForType("strVar", PseudoType.IntType)
       mismatchResult shouldBe a[Left[_, _]]
       mismatchResult.left.get should include("Type mismatch")
-      mismatchResult.left.get should include("String")
-      mismatchResult.left.get should include("Integer")
+      mismatchResult.left.get should include("string")
+      mismatchResult.left.get should include("int")
       
       // Undefined variable
-      val undefinedResult = symbolTable.checkVariableForType("unknownVar", classOf[String])
+      val undefinedResult = symbolTable.checkVariableForType("unknownVar", PseudoType.StringType)
       undefinedResult shouldBe a[Left[_, _]]
       undefinedResult.left.get should include("Undefined variable")
     }
@@ -80,8 +81,8 @@ class SymbolTableTest extends AnyWordSpec with Matchers {
       symbolTable2.getType("var2") shouldBe None
       
       // Only the latest table should have all variables
-      symbolTable3.getType("var1") shouldBe Some(classOf[String])
-      symbolTable3.getType("var2") shouldBe Some(classOf[Int])
+      symbolTable3.getType("var1") shouldBe Some(PseudoType.StringType)
+      symbolTable3.getType("var2") shouldBe Some(PseudoType.IntType)
     }
   }
 }

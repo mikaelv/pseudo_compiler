@@ -1,7 +1,7 @@
 package pseudoc.ast
 
 import scala.reflect.ClassTag
-import pseudoc.SymbolTable
+import pseudoc.{SymbolTable, PseudoType}
 
 sealed trait Statement {
   /**
@@ -64,12 +64,12 @@ case class Assignment(variable: String, value: Expression) extends Statement {
         // Check if this is a typed expression and get its type
         value match {
           case typedExpr: TypedExpression[_] =>
-            val exprType = typedExpr.expressionType
+            val exprType = PseudoType.fromClass(typedExpr.expressionType)
             
             // Check if variable already exists with a compatible type
             symbolTable.getType(variable) match {
               case Some(varType) if varType != exprType =>
-                Left(s"Type mismatch: Cannot assign ${exprType.getSimpleName} to variable '$variable' of type ${varType.getSimpleName}")
+                Left(s"Type mismatch: Cannot assign ${exprType.name} to variable '$variable' of type ${varType.name}")
               case _ =>
                 // Add or update variable in symbol table
                 Right(symbolTable.addVariable(variable, exprType))
