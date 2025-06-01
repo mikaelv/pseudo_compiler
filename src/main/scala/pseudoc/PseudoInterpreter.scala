@@ -7,6 +7,59 @@ import pseudoc.ast.{ConsoleOutput, DefaultConsoleOutput}
 case class EvalResult(console: ConsoleOutput, vars: VarMap)
 
 object PseudoInterpreter {
+  /**
+   * Parse, type check, and evaluate a program from source code
+   * 
+   * @param source The program source code
+   * @param console Console output implementation
+   * @return Either an error message or the evaluation result
+   */
+  def parseTypeCheckAndEval(
+      source: String,
+      console: ConsoleOutput = DefaultConsoleOutput()
+  ): Either[String, EvalResult] = {
+    // Parse the program
+    PseudoCodeParser.parseProgram(source) match {
+      case Left(parseError) => 
+        Left(s"Parse error: $parseError")
+        
+      case Right(program) =>
+        // Type check the program
+        program.typeCheck() match {
+          case Left(typeError) => 
+            Left(s"Type error: $typeError")
+            
+          case Right(_) =>
+            // Initialize empty variable map
+            val initialVarMap = createVarMapFromDeclarations(program.variables)
+            
+            // Evaluate each statement
+            val result = program.statements.foldLeft(EvalResult(console, initialVarMap)) { 
+              (result, statement) => evalWithVars(statement, result.vars, result.console)
+            }
+            
+            Right(result)
+        }
+    }
+  }
+  
+  /**
+   * Create a VarMap from variable declarations
+   */
+  private def createVarMapFromDeclarations(variables: Variables): VarMap = {
+    val initialValues = variables.vars.map { varDecl =>
+      val initialValue = varDecl.tpe match {
+        case "string" => ""
+        case "int" | "integer" => 0
+        case "bool" | "boolean" => false
+        case other => throw new IllegalArgumentException(s"Unsupported type: $other")
+      }
+      
+      (varDecl.name, initialValue)
+    }
+    
+    VarMap(initialValues: _*)
+  }
   // For backward compatibility
   def eval(
       stmt: Statement,

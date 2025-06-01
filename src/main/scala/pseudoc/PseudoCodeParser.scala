@@ -2,7 +2,7 @@ package pseudoc
 
 import fastparse.*
 import JavaWhitespace.*
-import pseudoc.BooleanExpressionParser.booleanExpression
+import pseudoc.BooleanExpressionParser.{booleanExpression, comparisonExpr}
 import pseudoc.IntExpressionParser.integer
 import pseudoc.ast.*
 
@@ -71,7 +71,7 @@ object PseudoCodeParser {
 
 
   def ifStatement[$: P]: P[IfStatement] = P(
-    StringIn("Si", "If") ~/ booleanExpression ~
+    StringIn("Si", "If") ~/ comparisonExpr ~
       StringIn("Alors", "Then") ~/ statement.rep ~
       (StringIn("Sinon", "Else") ~/ statement.rep).? ~
       StringIn("Fin Si", "End If")
@@ -98,8 +98,28 @@ object PseudoCodeParser {
 
 
   // Combined assignment - try int assignment first to avoid ambiguity
-  def assignment[$: P]: P[Assignment] = (boolAssignment | intAssignment | stringAssignment).log
+  def assignment[$: P]: P[Assignment] = (boolAssignment | intAssignment | stringAssignment)
 
-  def statement[$: P]: P[Statement] = (forLoop | ifStatement | print | assignment).log
+  def statement[$: P]: P[Statement] = (forLoop | ifStatement | print | assignment)
+  
+  /**
+   * Parse a complete program consisting of algorithm, variables, and statements
+   */
+  def program[$: P]: P[Program] = 
+    P(algo ~ variables ~ statement.rep).map { 
+      case (algo, vars, statements) => Program(algo, vars, statements)
+    }
+    
+  /**
+   * Parse input into a Program object
+   */
+  def parseProgram(input: String): Either[String, Program] = {
+    import fastparse._
+    
+    parse(input, program(_)) match {
+      case Parsed.Success(program, _) => Right(program)
+      case f: Parsed.Failure => Left(f.msg)
+    }
+  }
 
 }

@@ -1,10 +1,21 @@
 package pseudoc.ast
 
-sealed trait IntExpression
+import pseudoc.SymbolTable
 
-case class IntRef(varName: String) extends IntExpression
+sealed trait IntExpression extends TypedExpression[Int] {
+  override def expressionType: Class[Int] = classOf[Int]
+}
 
-case class IntLiteral(value: Int) extends IntExpression
+case class IntRef(varName: String) extends IntExpression {
+  override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = {
+    symbolTable.checkVariableForType(varName, classOf[Int]).map(_ => ())
+  }
+}
+
+case class IntLiteral(value: Int) extends IntExpression {
+  // Int literals are always type-correct
+  override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = Right(())
+}
 
 enum MultDivOperator:
   case Mult, Div
@@ -12,7 +23,18 @@ enum MultDivOperator:
 case class IntMultDiv(
     base: IntExpression,
     ops: Seq[(MultDivOperator, IntExpression)]
-) extends IntExpression
+) extends IntExpression {
+  override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = {
+    // Check base expression
+    val baseResult = base.typeCheck(symbolTable)
+    
+    // Check all operands
+    val opResults = ops.map(_._2.typeCheck(symbolTable))
+    val errors = (baseResult +: opResults).collect { case Left(error) => error }
+    
+    if (errors.isEmpty) Right(()) else Left(errors.mkString("\n"))
+  }
+}
 
 object IntMultDiv {
   def create(
@@ -34,7 +56,18 @@ enum AddSubOperator:
   case Add, Sub
 
 case class IntAddSub(base: IntMultDiv, ops: Seq[(AddSubOperator, IntMultDiv)])
-    extends IntExpression
+    extends IntExpression {
+  override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = {
+    // Check base expression
+    val baseResult = base.typeCheck(symbolTable)
+    
+    // Check all operands
+    val opResults = ops.map(_._2.typeCheck(symbolTable))
+    val errors = (baseResult +: opResults).collect { case Left(error) => error }
+    
+    if (errors.isEmpty) Right(()) else Left(errors.mkString("\n"))
+  }
+}
 
 object IntAddSub {
   def create(head: IntMultDiv, tail: Seq[(String, IntMultDiv)]): IntAddSub =
