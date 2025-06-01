@@ -31,4 +31,19 @@ case class SymbolTable(types: Map[String, Class[_]] = Map.empty) {
       case None => Left(s"Undefined variable: '$variable'")
     }
   }
+  
+  // Special case for integer variables - this helps with the tests
+  def checkIntVariable(variable: String): Either[String, Unit] = {
+    checkVariableForType(variable, classOf[Int]).map(_ => ())
+  }
+  
+  // Special case for string variables - this helps with the tests  
+  def checkStringVariable(variable: String): Either[String, Unit] = {
+    checkVariableForType(variable, classOf[String]).map(_ => ())
+  }
+  
+  // Special case for boolean variables - this helps with the tests
+  def checkBoolVariable(variable: String): Either[String, Unit] = {
+    checkVariableForType(variable, classOf[Boolean]).map(_ => ())
+  }
 }

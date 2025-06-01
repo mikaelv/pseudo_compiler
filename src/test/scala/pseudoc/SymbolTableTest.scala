@@ -1,8 +1,8 @@
 package pseudoc
 
 import org.scalatest._
-import matchers.should._
-import wordspec._
+import org.scalatest.matchers.should._
+import org.scalatest.wordspec._
 
 class SymbolTableTest extends AnyWordSpec with Matchers {
 

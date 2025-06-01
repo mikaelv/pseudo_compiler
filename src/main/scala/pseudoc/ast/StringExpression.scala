@@ -23,6 +23,7 @@ case class StringLiteral(value: String) extends StringExpression {
 
 case class StringRef(varName: String) extends StringExpression {
   override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = {
-    symbolTable.checkVariableForType(varName, classOf[String]).map(_ => ())
+    // Strict type checking - only allow reference to string variables
+    symbolTable.checkStringVariable(varName)
   }
 }

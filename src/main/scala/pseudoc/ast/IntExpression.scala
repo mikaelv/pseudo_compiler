@@ -8,7 +8,7 @@ sealed trait IntExpression extends TypedExpression[Int] {
 
 case class IntRef(varName: String) extends IntExpression {
   override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = {
-    symbolTable.checkVariableForType(varName, classOf[Int]).map(_ => ())
+    symbolTable.checkIntVariable(varName)
   }
 }
 

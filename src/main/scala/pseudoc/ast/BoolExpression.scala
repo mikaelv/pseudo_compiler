@@ -26,7 +26,7 @@ enum ComparisonOperator:
 
 case class BoolRef(varName: String) extends BoolExpression {
   override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = {
-    symbolTable.checkVariableForType(varName, classOf[Boolean]).map(_ => ())
+    symbolTable.checkBoolVariable(varName)
   }
 }
 

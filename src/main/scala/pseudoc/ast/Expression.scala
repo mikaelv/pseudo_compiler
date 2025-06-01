@@ -5,7 +5,7 @@ import pseudoc.SymbolTable
 /**
  * Base trait for all expressions with static type checking
  */
-trait Expression { // TODO sealed
+trait Expression {
   /**
    * Check if this expression is type-correct
    * @return Either an error message or Unit if type checking passes
@@ -16,7 +16,7 @@ trait Expression { // TODO sealed
 /**
  * Trait for expressions with a known return type
  */
-trait TypedExpression[T] extends Expression { // TODO sealed
+trait TypedExpression[T] extends Expression {
   /**
    * Get the class object for the expression type
    */

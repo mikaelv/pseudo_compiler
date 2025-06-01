@@ -118,7 +118,7 @@ object PseudoCodeParser {
     
     parse(input, program(_)) match {
       case Parsed.Success(program, _) => Right(program)
-      case f: Parsed.Failure => Left(f.msg)
+      case f: Parsed.Failure => Left(s"${f.msg} (at index ${f.index})")
     }
   }
 
