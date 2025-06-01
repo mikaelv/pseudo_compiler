@@ -27,11 +27,11 @@ case class IntMultDiv(
   override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = {
     // Check base expression
     val baseResult = base.typeCheck(symbolTable)
-    
+
     // Check all operands
     val opResults = ops.map(_._2.typeCheck(symbolTable))
     val errors = (baseResult +: opResults).collect { case Left(error) => error }
-    
+
     if (errors.isEmpty) Right(()) else Left(errors.mkString("\n"))
   }
 }
@@ -40,43 +40,48 @@ object IntMultDiv {
   def create(
       head: IntExpression,
       tail: Seq[(String, IntExpression)]
-  ): IntMultDiv =
-    // TODO if tail.isEmpty head
-    new IntMultDiv(
-      head,
-      tail.map {
-        case ("*", expr) => (MultDivOperator.Mult, expr)
-        case ("/", expr) => (MultDivOperator.Div, expr)
-        case (op, expr) => throw new RuntimeException("Invalid operator: " + op)
-      }
-    )
+  ): IntExpression =
+    if (tail.isEmpty)
+      head
+    else
+      new IntMultDiv(
+        head,
+        tail.map {
+          case ("*", expr) => (MultDivOperator.Mult, expr)
+          case ("/", expr) => (MultDivOperator.Div, expr)
+          case (op, expr)  => throw new RuntimeException("Invalid operator: " + op)
+        }
+      )
 }
 
 enum AddSubOperator:
   case Add, Sub
 
-case class IntAddSub(base: IntMultDiv, ops: Seq[(AddSubOperator, IntMultDiv)])
+case class IntAddSub(base: IntExpression, ops: Seq[(AddSubOperator, IntExpression)])
     extends IntExpression {
   override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = {
     // Check base expression
     val baseResult = base.typeCheck(symbolTable)
-    
+
     // Check all operands
     val opResults = ops.map(_._2.typeCheck(symbolTable))
     val errors = (baseResult +: opResults).collect { case Left(error) => error }
-    
+
     if (errors.isEmpty) Right(()) else Left(errors.mkString("\n"))
   }
 }
 
 object IntAddSub {
-  def create(head: IntMultDiv, tail: Seq[(String, IntMultDiv)]): IntAddSub =
-    new IntAddSub(
-      head,
-      tail.map {
-        case ("+", expr) => (AddSubOperator.Add, expr)
-        case ("-", expr) => (AddSubOperator.Sub, expr)
-        case (op, expr) => throw new RuntimeException("Invalid operator: " + op)
-      }
-    )
+  def create(head: IntExpression, tail: Seq[(String, IntExpression)]): IntExpression =
+    if (tail.isEmpty)
+      head
+    else
+      new IntAddSub(
+        head,
+        tail.map {
+          case ("+", expr) => (AddSubOperator.Add, expr)
+          case ("-", expr) => (AddSubOperator.Sub, expr)
+          case (op, expr)  => throw new RuntimeException("Invalid operator: " + op)
+        }
+      )
 }

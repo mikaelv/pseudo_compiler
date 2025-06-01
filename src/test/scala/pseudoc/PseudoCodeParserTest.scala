@@ -6,8 +6,10 @@ import fastparse.*
 import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers.*
 import pseudoc.BooleanExpressionParser.comparisonExpr
+import pseudoc.Lexical.identifier
 import pseudoc.ast.*
 import pseudoc.PseudoType
+import pseudoc.PseudoType.IntType
 
 class PseudoCodeParserTest extends AnyFunSuiteLike:
   def check[A](
@@ -17,6 +19,9 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
   ): Assertion =
     val result = parse(str, myParser(_))
     result.get.value should ===(expectedValue)
+
+  test("identifier"):
+    check("test123 \nblah :\n", identifier(_), "test123")
 
   test("algorithme"):
     check(
@@ -37,16 +42,29 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     )
 
     check(
-      "Variables:\n chaine1: chaîne, chaine2: chaîne de caractères, chaine3: string",
+      "Variables:\n chaine1: chaîne, i: entier, chaine3: string",
       variables(_),
       Variables(
         Seq(
           VariableDecl("chaine1", PseudoType.StringType),
-          VariableDecl("chaine2", PseudoType.StringType),
+          VariableDecl("i", PseudoType.IntType),
           VariableDecl("chaine3", PseudoType.StringType)
         )
       )
     )
+
+  test("program") {
+    check(
+      "Algorithme: test \n" +
+        "Variables :\n" +
+        "  i: int\n" +
+        "Début\n" +
+        "  i <- 1\n" +
+        "Fin",
+      program(_),
+      Program(Algorithm("test"), Variables(Seq(VariableDecl("i", IntType))), Seq(Assignment("i", IntLiteral(1))))
+    )
+  }
 
   test("for loop"):
     check(
@@ -181,10 +199,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check(
       "x <- 42",
       assignment(_),
-      Assignment(
-        "x",
-        IntAddSub(IntMultDiv(IntLiteral(42), Seq.empty), Seq.empty)
-      )
+      Assignment("x", IntLiteral(42))
     )
 
   test("variable assignment with string"):
@@ -226,10 +241,20 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       BoolOperations(BoolLiteral(false), (BooleanOperator.Or, BoolLiteral(true)))
     )
 
-
-    check("false or true and (x or false)",
+    check(
+      "false or true and (x or false)",
       BooleanExpressionParser.or(_),
-      BoolOperations(BoolLiteral(false), (BooleanOperator.Or,
-        BoolOperations(BoolLiteral(true), (BooleanOperator.And, BoolOperations(BoolRef("x"), (BooleanOperator.Or, BoolLiteral(false)))))))
+      BoolOperations(
+        BoolLiteral(false),
+        (
+          BooleanOperator.Or,
+          BoolOperations(
+            BoolLiteral(true),
+            (
+              BooleanOperator.And,
+              BoolOperations(BoolRef("x"), (BooleanOperator.Or, BoolLiteral(false)))
+            )
+          )
+        )
+      )
     )
-

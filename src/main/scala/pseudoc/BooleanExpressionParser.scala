@@ -2,8 +2,8 @@ package pseudoc
 
 import fastparse.JavaWhitespace.*
 import fastparse.*
-import pseudoc.PseudoCodeParser.identifier
 import pseudoc.ast.*
+import Lexical.identifier
 
 object BooleanExpressionParser {
 
