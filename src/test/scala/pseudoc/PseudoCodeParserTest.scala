@@ -7,6 +7,7 @@ import org.scalatest.Assertion
 import org.scalatest.matchers.should.Matchers.*
 import pseudoc.BooleanExpressionParser.comparisonExpr
 import pseudoc.ast.*
+import pseudoc.PseudoType
 
 class PseudoCodeParserTest extends AnyFunSuiteLike:
   def check[A](
@@ -26,13 +27,13 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check("Algorithme  :algo2", algo(_), Algorithm("algo2"))
 
   test("string variable"):
-    check("chaine1: chaîne", variableDecl(_), VariableDecl("chaine1", "string"))
+    check("chaine1: chaîne", variableDecl(_), VariableDecl("chaine1", PseudoType.StringType))
 
   test("variables"):
     check(
       "Variables:\nchaine1: string",
       variables(_),
-      Variables(Seq(VariableDecl("chaine1", "string")))
+      Variables(Seq(VariableDecl("chaine1", PseudoType.StringType)))
     )
 
     check(

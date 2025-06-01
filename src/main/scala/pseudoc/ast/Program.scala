@@ -32,14 +32,7 @@ case class Program(
     
     // Add each variable to the symbol table with its declared type
     variables.vars.foldLeft(symbolTable) { (table, varDecl) =>
-      val tpe = varDecl.tpe match {
-        case "string" => classOf[String]
-        case "int" | "integer" => classOf[Int]
-        case "bool" | "boolean" => classOf[Boolean]
-        case other => throw new IllegalArgumentException(s"Unsupported type: $other")
-      }
-      
-      table.addVariable(varDecl.name, tpe)
+      table.addVariable(varDecl.name, varDecl.tpe)
     }
   }
 }

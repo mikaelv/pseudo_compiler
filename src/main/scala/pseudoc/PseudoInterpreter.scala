@@ -2,6 +2,7 @@ package pseudoc
 
 import pseudoc.ast.*
 import pseudoc.ast.{ConsoleOutput, DefaultConsoleOutput}
+import pseudoc.PseudoType
 
 // Result of evaluation containing both console output and updated variables
 case class EvalResult(console: ConsoleOutput, vars: VarMap)
@@ -49,10 +50,9 @@ object PseudoInterpreter {
   private def createVarMapFromDeclarations(variables: Variables): VarMap = {
     val initialValues = variables.vars.map { varDecl =>
       val initialValue = varDecl.tpe match {
-        case "string" => ""
-        case "int" | "integer" => 0
-        case "bool" | "boolean" => false
-        case other => throw new IllegalArgumentException(s"Unsupported type: $other")
+        case PseudoType.StringType => ""
+        case PseudoType.IntType => 0
+        case PseudoType.BoolType => false
       }
       
       (varDecl.name, initialValue)

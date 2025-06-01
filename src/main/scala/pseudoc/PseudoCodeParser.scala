@@ -5,6 +5,7 @@ import JavaWhitespace.*
 import pseudoc.BooleanExpressionParser.{booleanExpression, comparisonExpr}
 import pseudoc.IntExpressionParser.integer
 import pseudoc.ast.*
+import pseudoc.{SymbolTable, PseudoType}
 
 
 object PseudoCodeParser {
@@ -12,21 +13,33 @@ object PseudoCodeParser {
   def identifier[$: P]: P[String] =
     (CharIn("a-zA-Z") ~~ CharIn("a-zA-Z_0-9").rep).!
 
+  // Context-aware variable reference parser
+  def variableReference[$: P](symbolTable: SymbolTable): P[Expression] = identifier.map { varName =>
+    symbolTable.getType(varName) match {
+      case Some(PseudoType.IntType) => IntRef(varName)
+      case Some(PseudoType.StringType) => StringRef(varName)
+      case Some(PseudoType.BoolType) => BoolRef(varName)
+      case None => throw new RuntimeException(s"Undefined variable: $varName")
+    }
+  }
+
   def algo[$: P]: P[Algorithm] =
     P("Algorithme" ~ ":" ~ identifier).map(Algorithm.apply)
 
   /** "chaine de caracteres" must be before "chaine" */
-  def typeString[$: P]: P[String] = P(
+  def typeString[$: P]: P[PseudoType] = P(
     StringIn(
       "chaine de caracteres",
-      "chaine de caractères",
+      "chaine de caractères", 
       "chaîne de caractères",
       "chaîne",
       "chaine",
       "string",
       "str"
-    )
-  ).map(_ => "string")
+    ).map(_ => PseudoType.StringType) |
+    StringIn("int", "integer", "entier").map(_ => PseudoType.IntType) |
+    StringIn("bool", "boolean", "booléen").map(_ => PseudoType.BoolType)
+  )
 
   def tpe[$: P] = typeString
 
@@ -36,6 +49,13 @@ object PseudoCodeParser {
   def variables[$: P]: P[Variables] = P(
     "Variables" ~ ":" ~ variableDecl.rep(sep = ",")
   ).map(Variables.apply)
+
+  // Helper function to build SymbolTable from Variables
+  def buildSymbolTable(vars: Variables): SymbolTable = {
+    vars.vars.foldLeft(SymbolTable()) { (table, varDecl) =>
+      table.addVariable(varDecl.name, varDecl.tpe)
+    }
+  }
 
 
   def forLoop[$: P] = P(
@@ -82,7 +102,12 @@ object PseudoCodeParser {
       IfStatement(condition, thenBranch, None)
   }
   
-  // Assignment parser - tries different expression types in order
+  // Context-aware assignment parser that resolves variable references using SymbolTable
+  def assignmentWithContext[$: P](symbolTable: SymbolTable): P[Assignment] = P(
+    identifier ~ "<-" ~ variableReference(symbolTable)
+  ).map { case (variable, value) => Assignment(variable, value) }
+
+  // Assignment parser - tries different expression types in order  
   def assignment[$: P]: P[Assignment] = P(
     identifier ~ "<-" ~ (
       IntExpressionParser.addSub.map(_.asInstanceOf[Expression]) |
@@ -91,8 +116,24 @@ object PseudoCodeParser {
     )
   ).map { case (variable, value) => Assignment(variable, value) }
 
+  // Context-aware statement parser
+  def statementWithContext[$: P](symbolTable: SymbolTable): P[Statement] = 
+    (forLoop | ifStatement | print | assignmentWithContext(symbolTable))
+
   def statement[$: P]: P[Statement] = (forLoop | ifStatement | print | assignment)
   
+  /**
+   * Parse a complete program consisting of algorithm, variables, and statements
+   * Uses context-aware parsing to resolve variable references
+   */
+  def programWithContext[$: P]: P[Program] = 
+    for {
+      algoResult <- algo
+      varsResult <- variables
+      symbolTable = buildSymbolTable(varsResult)
+      statements <- statementWithContext(symbolTable).rep
+    } yield Program(algoResult, varsResult, statements)
+
   /**
    * Parse a complete program consisting of algorithm, variables, and statements
    */
@@ -102,12 +143,12 @@ object PseudoCodeParser {
     }
     
   /**
-   * Parse input into a Program object
+   * Parse input into a Program object using context-aware parsing
    */
   def parseProgram(input: String): Either[String, Program] = {
     import fastparse._
     
-    parse(input, program(_)) match {
+    parse(input, programWithContext(_)) match {
       case Parsed.Success(program, _) => Right(program)
       case f: Parsed.Failure => Left(s"${f.msg} (at index ${f.index})")
     }

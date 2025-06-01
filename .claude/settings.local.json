@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sbt test)",
+      "Bash(grep:*)",
+      "Bash(sbt:*)"
+    ],
+    "deny": []
+  }
+}

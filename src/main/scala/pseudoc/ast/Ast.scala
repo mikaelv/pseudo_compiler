@@ -27,7 +27,7 @@ case class TestConsoleOutput(output: String = "") extends ConsoleOutput {
 
 case class Algorithm(name: String) extends Ast
 case class Variables(vars: Seq[VariableDecl])
-case class VariableDecl(name: String, tpe: String)
+case class VariableDecl(name: String, tpe: pseudoc.PseudoType)
 
 
 sealed trait Ast {}
