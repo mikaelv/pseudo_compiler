@@ -17,8 +17,8 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       ))
       
       val statements = Seq(
-        IntAssignment("x", IntLiteral(42)),
-        StringAssignment("message", StringLiteral("Hello")),
+        Assignment("x", IntLiteral(42)),
+        Assignment("message", StringLiteral("Hello")),
         FunctionCallString("print", Seq(StringRef("message")))
       )
       
@@ -55,7 +55,7 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       val invalidInput = "x <- 10 +"
       
       // Try to parse just this expression
-      val parseResult = parse(invalidInput, PseudoCodeParser.intAssignment(_))
+      val parseResult = parse(invalidInput, PseudoCodeParser.assignment(_))
       
       // Should be a parse failure
       parseResult match {
@@ -74,8 +74,8 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       
       val statements = Seq(
         // Type error: assigning string literal to integer variable
-        IntAssignment("x", IntRef("message")),
-        StringAssignment("message", StringLiteral("Hello"))
+        Assignment("x", IntRef("message")),
+        Assignment("message", StringLiteral("Hello"))
       )
       
       val program = Program(algo, vars, statements)
@@ -97,24 +97,24 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       
       val statements = Seq(
         // Initialize variables
-        IntAssignment("sum", IntLiteral(0)),
-        BoolAssignment("flag", BoolLiteral(true)),
+        Assignment("sum", IntLiteral(0)),
+        Assignment("flag", BoolLiteral(true)),
         
         // Integer arithmetic
-        IntAssignment("sum", IntAddSub(
+        Assignment("sum", IntAddSub(
           IntMultDiv(IntRef("sum"), Seq()),
           Seq((AddSubOperator.Add, IntMultDiv(IntLiteral(10), Seq())))
         )),
         
         // Boolean comparison
-        BoolAssignment("flag", Comparison(
+        Assignment("flag", Comparison(
           IntRef("sum"),
           ComparisonOperator.GreaterThan,
           IntLiteral(5)
         )),
         
         // String assignment without concatenating with int
-        StringAssignment("message", StringLiteral("Result verified"))
+        Assignment("message", StringLiteral("Result verified"))
       )
       
       val program = Program(algo, vars, statements)
@@ -152,8 +152,8 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       ))
       
       val statements = Seq(
-        IntAssignment("x", IntLiteral(10)),
-        StringAssignment("y", StringLiteral("hello")),
+        Assignment("x", IntLiteral(10)),
+        Assignment("y", StringLiteral("hello")),
         // Type error: attempting to use string in comparison
         IfStatement(
           Comparison(
@@ -183,9 +183,9 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       ))
       
       val statements = Seq(
-        IntAssignment("a", IntLiteral(42)),
-        StringAssignment("b", StringLiteral("Hello")),
-        BoolAssignment("c", BoolLiteral(true)),
+        Assignment("a", IntLiteral(42)),
+        Assignment("b", StringLiteral("Hello")),
+        Assignment("c", BoolLiteral(true)),
         // Print only string value (no concatenation with int)
         FunctionCallString("print", Seq(StringRef("b")))
       )

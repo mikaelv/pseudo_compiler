@@ -82,23 +82,14 @@ object PseudoCodeParser {
       IfStatement(condition, thenBranch, None)
   }
   
-  // Integer assignment - this should come first in the assignment parser
-  def intAssignment[$: P]: P[IntAssignment] = P(
-    identifier ~ "<-" ~ IntExpressionParser.addSub
-  ).map { case (variable, value) => IntAssignment(variable, value) }
-  
-  // String assignment
-  def stringAssignment[$: P]: P[StringAssignment] = P(
-    identifier ~ "<-" ~ expressionString
-  ).map { case (variable, value) => StringAssignment(variable, value) }
-
-  def boolAssignment[$: P]: P[BoolAssignment] = P(
-    identifier ~ "<-" ~ BooleanExpressionParser.or
-  ).map { case (variable, value) => BoolAssignment(variable, value) }
-
-
-  // Combined assignment - try int assignment first to avoid ambiguity
-  def assignment[$: P]: P[Assignment] = (boolAssignment | intAssignment | stringAssignment)
+  // Assignment parser - tries different expression types in order
+  def assignment[$: P]: P[Assignment] = P(
+    identifier ~ "<-" ~ (
+      IntExpressionParser.addSub.map(_.asInstanceOf[Expression]) |
+      expressionString.map(_.asInstanceOf[Expression]) |
+      BooleanExpressionParser.or.map(_.asInstanceOf[Expression])
+    )
+  ).map { case (variable, value) => Assignment(variable, value) }
 
   def statement[$: P]: P[Statement] = (forLoop | ifStatement | print | assignment)
   

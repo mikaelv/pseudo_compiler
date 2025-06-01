@@ -2,9 +2,9 @@
 This projet allows to interpret the Efrei pseudo-code, as taught in the module TI102 Algorithms.
 
 ## Missing features
-- assignment type check bogus ? evaluated at runtime
 - arrays
-- program structure
+- int modulo
+- Ecrire with multiple arguments
  
 ## Pseudo-code language
 Here is an example in French an in English, highlighting the syntax of the language :

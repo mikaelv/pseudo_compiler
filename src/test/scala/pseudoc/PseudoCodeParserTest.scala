@@ -180,7 +180,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check(
       "x <- 42",
       assignment(_),
-      IntAssignment(
+      Assignment(
         "x",
         IntAddSub(IntMultDiv(IntLiteral(42), Seq.empty), Seq.empty)
       )
@@ -190,7 +190,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check(
       "message <- \"Hello, world!\"",
       assignment(_),
-      StringAssignment(
+      Assignment(
         "message",
         StringConcat(Seq(StringLiteral("Hello, world!")))
       )
@@ -200,7 +200,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check(
       "greeting <- \"Hello, \" + name",
       assignment(_),
-      StringAssignment(
+      Assignment(
         "greeting",
         StringConcat(Seq(StringLiteral("Hello, "), StringRef("name")))
       )

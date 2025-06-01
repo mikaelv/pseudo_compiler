@@ -1,7 +1,7 @@
 # Pseudo Compiler Project Guidelines
 
 ## Running tests
-Do not try to build or run tests, the human prefers to do it himself.
+use sbt
 
 ## Code Style Preferences
 
@@ -16,10 +16,12 @@ Do not try to build or run tests, the human prefers to do it himself.
 - Avoid implicit type conversions between strings and integers
 - Perform additional runtime type checking when needed
 
-### Parser Ordering
+### Parser Design
+- **Unified Assignment Parser**: Single assignment parser tries different expression types in sequence
 - Order parsers carefully when they might have overlapping patterns
 - For alternative parsers (using `|`), place the more specific patterns first
 - Be aware that the `expressionString` parser can match empty sequences, which may cause ambiguity
+- Assignment parsing: `identifier ~ "<-" ~ (IntExpression | StringExpression | BoolExpression)`
 
 ### Testing
 - Test console output by capturing it in tests
@@ -34,14 +36,26 @@ Do not try to build or run tests, the human prefers to do it himself.
 - The interpreter now returns EvalResult containing both console output and updated variables
 
 ## Variable Assignment Implementation
-- Variable assignments are type-specific with StringAssignment and IntAssignment
-- The Assignment trait is sealed to ensure type safety
-- Type checking happens both at compile time and runtime
-- Parser tries integer assignments before string assignments to avoid ambiguity
+- **Unified Assignment Type**: Uses a single `Assignment(variable: String, value: Expression)` case class
+- Eliminates parser ambiguity by avoiding multiple assignment types (StringAssignment, IntAssignment, BoolAssignment)
+- Type checking happens at evaluation time based on the expression type and variable's declared type
+- Expression types are determined using pattern matching on TypedExpression subtypes
+- Type compatibility is enforced in the VarMap with boxing support for Java types
+
+## Type Compatibility and Boxing
+- **VarMap Type Checking**: Handles Java boxing compatibility automatically
+- Int/Integer compatibility: `classOf[Int]` and `classOf[java.lang.Integer]` are treated as compatible
+- Boolean/boolean compatibility: `classOf[Boolean]` and `classOf[java.lang.Boolean]` are treated as compatible
+- This resolves runtime type errors when Scala's boxed types don't match expected primitive types
 
 ## Example Usage
 
 ```scala
+// Unified assignment creation
+val assignment = Assignment("x", IntLiteral(42))
+val stringAssign = Assignment("msg", StringLiteral("hello"))
+val boolAssign = Assignment("flag", BoolLiteral(true))
+
 // For regular execution with console output
 val result = PseudoInterpreter.eval(stmt, vars, DefaultConsoleOutput())
 

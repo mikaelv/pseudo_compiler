@@ -83,7 +83,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   test("variable assignment with type checking - compatible types") {
     // String variable
     val vars = VarMap("message" -> "")
-    val assignment = StringAssignment("message", StringLiteral("Hello"))
+    val assignment = Assignment("message", StringLiteral("Hello"))
     val result = evalWithVars(assignment, vars, TestConsoleOutput())
     
     result.vars("message") should be("Hello")
@@ -91,7 +91,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     
     // Integer variable with integer literal
     val intVars = VarMap("counter" -> 0)
-    val intAssignment = IntAssignment("counter", IntLiteral(42))
+    val intAssignment = Assignment("counter", IntLiteral(42))
     val intResult = evalWithVars(intAssignment, intVars, TestConsoleOutput())
     
     intResult.vars("counter") should be(42)
@@ -101,7 +101,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   test("variable assignment with type checking - incompatible types") {
     // Runtime type check for variable types
     val vars = VarMap("counter" -> "")  // counter is a string, not an int
-    val assignment = IntAssignment("counter", IntLiteral(42))
+    val assignment = Assignment("counter", IntLiteral(42))
     
     val exception = intercept[RuntimeException] {
       evalWithVars(assignment, vars, TestConsoleOutput())
@@ -115,7 +115,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   test("variable assignment updates variable state for subsequent statements") {
     val vars = VarMap("x" -> 0)
     val statements = Seq(
-      IntAssignment("x", IntLiteral(5)),
+      Assignment("x", IntLiteral(5)),
       IfStatement(
         Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
         Seq(FunctionCallString("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
@@ -135,7 +135,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   test("integer assignment with parsed code") {
     // Test with just the assignment portion
     val assignmentCode = "x <- 42"
-    val Parsed.Success(assignmentStmt, _) = parse(assignmentCode, intAssignment(_))
+    val Parsed.Success(assignmentStmt, _) = parse(assignmentCode, assignment(_))
     
     val vars = VarMap("x" -> 0)
     val console = TestConsoleOutput()
@@ -148,7 +148,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   test("string assignment with parsed code") {
     // Test with just the assignment portion
     val assignmentCode = "message <- \"Hello\""
-    val Parsed.Success(assignmentStmt, _) = parse(assignmentCode, stringAssignment(_))
+    val Parsed.Success(assignmentStmt, _) = parse(assignmentCode, assignment(_))
     
     val vars = VarMap("message" -> "")
     val console = TestConsoleOutput()
@@ -161,7 +161,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   test("sequence of statements with assignment") {
     // First parse just the assignment
     val assignmentCode = "x <- 42"
-    val Parsed.Success(assignStmt, _) = parse(assignmentCode, intAssignment(_))
+    val Parsed.Success(assignStmt, _) = parse(assignmentCode, assignment(_))
     
     // Then parse an if statement
     val ifCode = 

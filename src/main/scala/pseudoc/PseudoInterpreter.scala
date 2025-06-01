@@ -164,10 +164,13 @@ object PseudoInterpreter {
     if (!vars.contains(assign.variable))
       throw new RuntimeException(s"Variable '${assign.variable}' is not declared")
 
-    val value = assign match
-      case StringAssignment(_, expr) => evalStringExpr(expr, vars)
-      case IntAssignment(_, expr)    => evalIntExpr(expr, vars)
-      case BoolAssignment(_, expr)   => evalBoolExpr(expr, vars)
+    // Evaluate the expression based on its type
+    val value = assign.value match {
+      case expr: StringExpression => evalStringExpr(expr, vars)
+      case expr: IntExpression    => evalIntExpr(expr, vars)
+      case expr: BoolExpression   => evalBoolExpr(expr, vars)
+      case _ => throw new RuntimeException(s"Unsupported expression type: ${assign.value.getClass}")
+    }
 
     vars.store(assign.variable, value)
   }

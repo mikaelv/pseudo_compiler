@@ -9,7 +9,14 @@ case class VarMap(v: Map[String, (Class[_], Any)]) {
 
     val optTpe = v.get(variable).map(_._1)
     optTpe.foreach { tpe =>
-      if (tpe != value.getClass)
+      // Handle boxing compatibility for Int/Integer and Boolean/boolean
+      val isCompatible = (tpe == classOf[Int] && value.getClass == classOf[java.lang.Integer]) ||
+                        (tpe == classOf[java.lang.Integer] && value.getClass == classOf[Int]) ||
+                        (tpe == classOf[Boolean] && value.getClass == classOf[java.lang.Boolean]) ||
+                        (tpe == classOf[java.lang.Boolean] && value.getClass == classOf[Boolean]) ||
+                        (tpe == value.getClass)
+      
+      if (!isCompatible)
         throw new RuntimeException(
           s"Type error: Cannot assign ${value.getClass} value to variable '${variable}' of type ${tpe}"
         )

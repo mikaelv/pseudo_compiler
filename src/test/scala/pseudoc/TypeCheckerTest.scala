@@ -19,17 +19,17 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
       
       val statements = Seq(
         // Correct assignments
-        StringAssignment("stringVar", StringLiteral("hello")),
-        IntAssignment("intVar", IntLiteral(42)),
-        BoolAssignment("boolVar", BoolLiteral(true)),
+        Assignment("stringVar", StringLiteral("hello")),
+        Assignment("intVar", IntLiteral(42)),
+        Assignment("boolVar", BoolLiteral(true)),
         
         // Correct variable references
-        StringAssignment("stringVar", StringRef("stringVar")),
-        IntAssignment("intVar", IntRef("intVar")),
-        BoolAssignment("boolVar", BoolRef("boolVar")),
+        Assignment("stringVar", StringRef("stringVar")),
+        Assignment("intVar", IntRef("intVar")),
+        Assignment("boolVar", BoolRef("boolVar")),
         
         // Correct expressions
-        IntAssignment("intVar", IntAddSub(
+        Assignment("intVar", IntAddSub(
           IntMultDiv(IntLiteral(5), Seq((MultDivOperator.Mult, IntRef("intVar")))),
           Seq((AddSubOperator.Add, IntMultDiv(IntLiteral(2), Seq())))
         )),
@@ -52,7 +52,7 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
       
       val statements = Seq(
         // Reference to undefined variable
-        StringAssignment("knownVar", StringRef("unknownVar"))
+        Assignment("knownVar", StringRef("unknownVar"))
       )
       
       val program = Program(algo, vars, statements)
@@ -74,7 +74,7 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
       
       val statements = Seq(
         // Type mismatch: assigning string to int variable
-        IntAssignment("intVar", IntRef("stringVar"))
+        Assignment("intVar", IntRef("stringVar"))
       )
       
       val program = Program(algo, vars, statements)
@@ -94,7 +94,7 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
       
       val statements = Seq(
         // Using string variable in integer expression
-        IntAssignment("intVar", IntAddSub(
+        Assignment("intVar", IntAddSub(
           IntMultDiv(IntLiteral(5), Seq()),
           Seq((AddSubOperator.Add, IntMultDiv(IntRef("stringVar"), Seq())))
         ))
@@ -117,9 +117,9 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
       ))
       
       val statements = Seq(
-        IntAssignment("x", IntLiteral(10)),
+        Assignment("x", IntLiteral(10)),
         // Type error: attempting to concatenate string with int
-        StringAssignment("message", StringConcat(Seq(
+        Assignment("message", StringConcat(Seq(
           StringLiteral("Count: "), 
           StringRef("x")  // x is an int, not a string
         )))
@@ -143,10 +143,10 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
       ))
       
       val statements = Seq(
-        IntAssignment("x", IntLiteral(10)),
+        Assignment("x", IntLiteral(10)),
         // Using only string literal - no direct concatenation with int
-        StringAssignment("message", StringLiteral("Count: 10")),
-        BoolAssignment("isValid", Comparison(
+        Assignment("message", StringLiteral("Count: 10")),
+        Assignment("isValid", Comparison(
           IntRef("x"), 
           ComparisonOperator.GreaterThan, 
           IntLiteral(5)
@@ -169,11 +169,11 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
       ))
       
       val statements = Seq(
-        IntAssignment("x", IntLiteral(10)),
+        Assignment("x", IntLiteral(10)),
         // Using only string literal - no direct concatenation with int
-        StringAssignment("message", StringLiteral("Count: 10")),
+        Assignment("message", StringLiteral("Count: 10")),
         // Type error: assigning string reference to boolean variable
-        BoolAssignment("isValid", BoolRef("message"))
+        Assignment("isValid", BoolRef("message"))
       )
       
       val program = Program(algo, vars, statements)

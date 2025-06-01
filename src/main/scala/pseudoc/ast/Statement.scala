@@ -55,66 +55,29 @@ case class IfStatement(
   }
 }
 
-sealed trait Assignment extends Statement {
-  def variable: String
-  type varType
-  def varTypeTag: ClassTag[varType]
-}
-
-case class StringAssignment(variable: String, value: StringExpression)
-    extends Assignment {
-  override type varType = StringExpression
-  override def varTypeTag: ClassTag[StringExpression] = implicitly[ClassTag[StringExpression]]
-  
+case class Assignment(variable: String, value: Expression) extends Statement {
   override def typeCheck(symbolTable: SymbolTable): Either[String, SymbolTable] = {
-    // Type check the expression
-    value.typeCheck(symbolTable).map { _ =>
-      // Check if variable already exists with a different type
-      if (symbolTable.getType(variable).exists(_ != classOf[String])) {
-        Left(s"Type mismatch: Cannot assign String to variable '$variable' of type ${symbolTable.getType(variable).get.getSimpleName}")
-      } else {
-        // Add or update variable in symbol table
-        Right(symbolTable.addVariable(variable, classOf[String]))
-      }
-    }.flatten
-  }
-}
-
-case class IntAssignment(variable: String, value: IntExpression)
-    extends Assignment {
-  override type varType = IntExpression
-  override def varTypeTag: ClassTag[IntExpression] = implicitly[ClassTag[IntExpression]]
-  
-  override def typeCheck(symbolTable: SymbolTable): Either[String, SymbolTable] = {
-    // Type check the expression
-    value.typeCheck(symbolTable).map { _ =>
-      // Check if variable already exists with a different type
-      if (symbolTable.getType(variable).exists(_ != classOf[Int])) {
-        Left(s"Type mismatch: Cannot assign Int to variable '$variable' of type ${symbolTable.getType(variable).get.getSimpleName}")
-      } else {
-        // Add or update variable in symbol table
-        Right(symbolTable.addVariable(variable, classOf[Int]))
-      }
-    }.flatten
-  }
-}
-
-case class BoolAssignment(variable: String, value: BoolExpression)
-  extends Assignment {
-  override type varType = BoolExpression
-  override def varTypeTag: ClassTag[BoolExpression] = implicitly[ClassTag[BoolExpression]]
-  
-  override def typeCheck(symbolTable: SymbolTable): Either[String, SymbolTable] = {
-    // Type check the expression
-    value.typeCheck(symbolTable).map { _ =>
-      // Check if variable already exists with a different type
-      if (symbolTable.getType(variable).exists(_ != classOf[Boolean])) {
-        Left(s"Type mismatch: Cannot assign Boolean to variable '$variable' of type ${symbolTable.getType(variable).get.getSimpleName}")
-      } else {
-        // Add or update variable in symbol table
-        Right(symbolTable.addVariable(variable, classOf[Boolean]))
-      }
-    }.flatten
+    // Type check the expression first
+    value.typeCheck(symbolTable) match {
+      case Left(error) => Left(error)
+      case Right(_) =>
+        // Check if this is a typed expression and get its type
+        value match {
+          case typedExpr: TypedExpression[_] =>
+            val exprType = typedExpr.expressionType
+            
+            // Check if variable already exists with a compatible type
+            symbolTable.getType(variable) match {
+              case Some(varType) if varType != exprType =>
+                Left(s"Type mismatch: Cannot assign ${exprType.getSimpleName} to variable '$variable' of type ${varType.getSimpleName}")
+              case _ =>
+                // Add or update variable in symbol table
+                Right(symbolTable.addVariable(variable, exprType))
+            }
+          case _ =>
+            Left(s"Cannot determine type of expression for assignment to variable '$variable'")
+        }
+    }
   }
 }
 
