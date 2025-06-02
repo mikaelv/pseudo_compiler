@@ -49,6 +49,8 @@ object Lexical {
       tolerantCases("alors", "then") ++
       tolerantCases("fin", "end") ++
       tolerantCases("ou", "or") ++
-      tolerantCases("and", "et")
+      tolerantCases("and", "et") ++
+      tolerantCases("vrai", "true") ++
+      tolerantCases("faux", "false")
   ).toSet
 }
