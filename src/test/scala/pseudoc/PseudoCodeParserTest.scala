@@ -93,6 +93,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     )
 
   test("comparison expression"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     check(
       "x = 5",
       comparisonExpr(_),
@@ -134,6 +135,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     )
 
   test("if statement - no else"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     check(
       "Si x = 5 Alors\nEcrire(\"x is 5\")\nFin Si",
       ifStatement(_),
@@ -150,6 +152,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     )
 
   test("if statement - with else"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     check(
       "Si x = 5 Alors\nEcrire(\"x is 5\")\nSinon\nEcrire(\"x is not 5\")\nFin Si",
       ifStatement(_),
@@ -173,6 +176,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     )
 
   test("if statement - english syntax"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     check(
       "If x = 5 Then\nPrint(\"x is 5\")\nElse\nPrint(\"x is not 5\")\nEnd If",
       ifStatement(_),
@@ -223,6 +227,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     )
 
   test("boolean expression"):
+    implicit val symbols: SymbolTable = SymbolTable()
     check(
       "true or x",
       BooleanExpressionParser.or(_),

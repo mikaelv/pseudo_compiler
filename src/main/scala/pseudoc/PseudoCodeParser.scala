@@ -2,15 +2,15 @@ package pseudoc
 
 import fastparse.*
 import fastparse.JavaWhitespace.*
-import pseudoc.BooleanExpressionParser.{booleanExpression, comparisonExpr}
+import pseudoc.BooleanExpressionParser.{boolFactor, comparisonExpr}
 import pseudoc.IntExpressionParser.integer
-import pseudoc.Lexical.identifier
+import pseudoc.Lexical.{identifier, ws}
 import pseudoc.ast.*
 
 object PseudoCodeParser {
 
   // Context-aware variable reference parser
-  def variableReference[$: P](symbolTable: SymbolTable): P[Expression] = identifier.map { varName =>
+  def variableReference[$: P](implicit symbolTable: SymbolTable): P[Expression] = identifier.map { varName =>
     symbolTable.getType(varName) match {
       case Some(PseudoType.IntType)    => IntRef(varName)
       case Some(PseudoType.StringType) => StringRef(varName)
@@ -83,10 +83,10 @@ object PseudoCodeParser {
     ) ~ "(" ~ stringExpression ~ ")"
   ).map(concat => FunctionCallString("print", Seq(concat)))
 
-  def ifStatement[$: P]: P[IfStatement] = P(
-    StringIn("Si", "If") ~ booleanExpression ~
-      StringIn("Alors", "Then") ~ statement.rep ~
-      (StringIn("Sinon", "Else").log("else") ~ statement.rep).? ~
+  def ifStatement[$: P](implicit symbols: SymbolTable): P[IfStatement] = P(
+    StringIn("Si", "If") ~~ ws ~ boolFactor ~
+      StringIn("Alors", "Then") ~~ ws ~ statement.rep ~
+      (StringIn("Sinon", "Else") ~~ ws ~ statement.rep).? ~
       StringIn("Fin Si", "End If")
   ).map {
     case (condition, thenBranch, Some(elseBranch)) =>
@@ -97,20 +97,20 @@ object PseudoCodeParser {
 
   // Context-aware assignment parser that resolves variable references using SymbolTable
   // TODO more coverage ?
-  def assignmentWithContext[$: P](symbolTable: SymbolTable): P[Assignment] = P(
-    identifier ~ "<-" ~ (expression | variableReference(symbolTable)) // TODO should just be expression ?
+  def assignmentWithContext[$: P](implicit symbols: SymbolTable): P[Assignment] = P(
+    identifier ~ "<-" ~ expression
   ).map { case (variable, value) => Assignment(variable, value) }
 
-  def expression[$: P]: P[Expression] = (
+  def expression[$: P](implicit symbols: SymbolTable): P[Expression] = (
     IntExpressionParser.addSub | stringExpression | BooleanExpressionParser.or
   )
 
   @deprecated("only for testing")
-  def assignment[$: P]: P[Assignment] = assignmentWithContext(SymbolTable())
+  def assignment[$: P]: P[Assignment] = assignmentWithContext(symbols = SymbolTable())
 
   // Context-aware statement parser
   def statementWithContext[$: P](implicit symbols: SymbolTable): P[Statement] =
-    (forLoop | ifStatement | print | assignmentWithContext(symbols))
+    (forLoop | ifStatement | print | assignmentWithContext)
 
   @deprecated("only for testing")
   def statement[$: P]: P[Statement] = statementWithContext(symbols = SymbolTable()).log

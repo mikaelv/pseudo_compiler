@@ -159,6 +159,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   }
   
   test("sequence of statements with assignment") {
+    implicit val symbols: SymbolTable = SymbolTable()
     // First parse just the assignment
     val assignmentCode = "x <- 42"
     val Parsed.Success(assignStmt, _) = parse(assignmentCode, assignment(_))
