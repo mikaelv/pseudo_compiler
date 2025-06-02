@@ -15,6 +15,7 @@ object PseudoCodeParser {
       case Some(PseudoType.IntType)    => IntRef(varName)
       case Some(PseudoType.StringType) => StringRef(varName)
       case Some(PseudoType.BoolType)   => BoolRef(varName)
+      // TODO how to report error ?
       case None => throw new RuntimeException(s"Undefined variable: $varName")
     }
   }
@@ -85,8 +86,8 @@ object PseudoCodeParser {
 
   def ifStatement[$: P](implicit symbols: SymbolTable): P[IfStatement] = P(
     StringIn("Si", "If") ~~ ws ~ boolFactor ~
-      StringIn("Alors", "Then") ~~ ws ~ statement.rep ~
-      (StringIn("Sinon", "Else") ~~ ws ~ statement.rep).? ~
+      StringIn("Alors", "Then") ~~ ws ~ statementWithContext.rep ~
+      (StringIn("Sinon", "Else") ~~ ws ~ statementWithContext.rep).? ~
       StringIn("Fin Si", "End If")
   ).map {
     case (condition, thenBranch, Some(elseBranch)) =>

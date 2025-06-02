@@ -9,7 +9,7 @@ import pseudoc.BooleanExpressionParser.comparisonExpr
 import pseudoc.Lexical.identifier
 import pseudoc.ast.*
 import pseudoc.PseudoType
-import pseudoc.PseudoType.IntType
+import pseudoc.PseudoType.{BoolType, IntType}
 
 class PseudoCodeParserTest extends AnyFunSuiteLike:
   def check[A](
@@ -227,7 +227,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     )
 
   test("boolean expression"):
-    implicit val symbols: SymbolTable = SymbolTable()
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> BoolType))
     check(
       "true or x",
       BooleanExpressionParser.or(_),

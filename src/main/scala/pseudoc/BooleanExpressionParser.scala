@@ -3,7 +3,8 @@ package pseudoc
 import fastparse.JavaWhitespace.*
 import fastparse.*
 import pseudoc.ast.*
-import Lexical.identifier
+import Lexical.{booleanLiteral, identifier}
+import pseudoc.PseudoCodeParser.variableReference
 
 object BooleanExpressionParser {
 
@@ -18,19 +19,9 @@ object BooleanExpressionParser {
 
   def parens[$: P](implicit symbols: SymbolTable): P[BoolExpression] = P("(" ~/ or ~ ")")
 
-  def boolTrue[$: P]: P[BoolLiteral] = P(
-    StringIn("true", "TRUE", "True", "vrai", "VRAI", "Vrai").!
-  ).map(_ => BoolLiteral(true))
-
-  def boolFalse[$: P]: P[BoolLiteral] = P(
-    StringIn("false", "FALSE", "False", "faux", "FAUX", "Faux").!
-  ).map(_ => BoolLiteral(false))
-
-  def booleanLiteral[$: P]: P[BoolLiteral] = P(boolTrue | boolFalse)
-
-  // TODO rename
   def boolFactor[$: P](implicit symbols: SymbolTable): P[BoolExpression] =
-    (comparisonExpr | booleanLiteral | identifier.map(BoolRef.apply) | parens).log
+    // TODO testcase for _.asInstanceOf
+    (booleanLiteral | comparisonExpr | variableReference.map(_.asInstanceOf[BoolRef]) | parens).log
 
   def booleanOperator[$: P]: P[ComparisonOperator] = P(
     StringIn("=", "==").map(_ => ComparisonOperator.Equal) |
@@ -42,7 +33,7 @@ object BooleanExpressionParser {
   )
 
   def comparisonExpr[$: P](implicit symbols: SymbolTable): P[BoolExpression] = P(
-    IntExpressionParser.intExpression ~ booleanOperator ~ IntExpressionParser.intExpression
+    IntExpressionParser.intFactor ~ booleanOperator ~ IntExpressionParser.intFactor
   ).map { case (left, op, right) => Comparison(left, op, right) }
 
 

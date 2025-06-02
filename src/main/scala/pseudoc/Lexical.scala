@@ -1,7 +1,8 @@
 package pseudoc
 
-import fastparse._
-import NoWhitespace._
+import fastparse.*
+import NoWhitespace.*
+import pseudoc.ast.BoolLiteral
 
 object Lexical {
 
@@ -15,6 +16,18 @@ object Lexical {
 
   def tolerantCases(fr: String, en: String): Seq[String] =
     tolerantCases(fr) ++ tolerantCases(en)
+
+
+  def boolTrue[$: P]: P[BoolLiteral] = P(
+    StringIn("true", "TRUE", "True", "vrai", "VRAI", "Vrai").!
+  ).map(_ => BoolLiteral(true))
+
+  def boolFalse[$: P]: P[BoolLiteral] = P(
+    StringIn("false", "FALSE", "False", "faux", "FAUX", "Faux").!
+  ).map(_ => BoolLiteral(false))
+
+  def booleanLiteral[$: P]: P[BoolLiteral] = P(boolTrue | boolFalse)
+
 
 
   // TODO factorize

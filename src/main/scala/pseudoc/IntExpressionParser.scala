@@ -17,10 +17,10 @@ object IntExpressionParser {
 
   def multDiv[$: P](implicit symbols: SymbolTable): P[IntExpression] = P(factor ~ (CharIn("*/").! ~ factor).rep).map(IntMultDiv.create)
 
-  def factor[$: P](implicit symbols: SymbolTable): P[IntExpression] = P(intExpression | parens)
+  def factor[$: P](implicit symbols: SymbolTable): P[IntExpression] = P(intFactor | parens)
 
   def parens[$: P](implicit symbols: SymbolTable): P[IntExpression] = P("(" ~ addSub ~ ")")
 
-  def intExpression[$: P](implicit symbols: SymbolTable): P[IntExpression] =
-    (integer | variableReference.map(_.asInstanceOf[IntRef]))
+  def intFactor[$: P](implicit symbols: SymbolTable): P[IntExpression] =
+    (integer | variableReference.collect { case i@IntRef(_) => i })
 }
