@@ -29,8 +29,9 @@ object BooleanExpressionParser {
 
   def booleanLiteral[$: P]: P[BoolLiteral] = P(boolTrue | boolFalse)
 
+  // TODO should include "or" ? circular definition, look at Python grammar
   def booleanExpression[$: P]: P[BoolExpression] =
-    (booleanLiteral | identifier.map(BoolRef.apply) | comparisonExpr)
+    (booleanLiteral | identifier.map(BoolRef.apply) | comparisonExpr).log
 
   def booleanOperator[$: P]: P[ComparisonOperator] = P(
     StringIn("=", "==").map(_ => ComparisonOperator.Equal) |

@@ -2,7 +2,7 @@ package pseudoc
 
 import fastparse.*
 import fastparse.JavaWhitespace.*
-import pseudoc.BooleanExpressionParser.comparisonExpr
+import pseudoc.BooleanExpressionParser.{booleanExpression, comparisonExpr}
 import pseudoc.IntExpressionParser.integer
 import pseudoc.Lexical.identifier
 import pseudoc.ast.*
@@ -66,10 +66,10 @@ object PseudoCodeParser {
     "\"" ~/ (strChars).rep.! ~ "\""
   ).map(_.replaceAll("\\\\NL", "\n"))
 
-  def expressionString[$: P]: P[StringConcat] =
+  def stringExpression[$: P]: P[StringConcat] =
     (identifier.map(StringRef.apply) | stringLiteral.map(StringLiteral.apply))
       .rep(sep = "+")
-      .map(StringConcat.apply)
+      .map(StringConcat.apply).log
 
   def print[$: P]: P[FunctionCallString] = P(
     StringIn(
@@ -80,40 +80,40 @@ object PseudoCodeParser {
       "write",
       "Print",
       "print"
-    ) ~ "(" ~ expressionString ~ ")"
+    ) ~ "(" ~ stringExpression ~ ")"
   ).map(concat => FunctionCallString("print", Seq(concat)))
 
   def ifStatement[$: P]: P[IfStatement] = P(
-    StringIn("Si", "If") ~ comparisonExpr ~
-      StringIn("Alors", "Then") ~ statement.rep ~
-      (StringIn("Sinon", "Else") ~ statement.rep).? ~
+    StringIn("Si", "If") ~/ booleanExpression ~
+      StringIn("Alors", "Then") ~/ statement.rep ~
+      (StringIn("Sinon", "Else") ~/ statement.rep).? ~
       StringIn("Fin Si", "End If")
   ).map {
     case (condition, thenBranch, Some(elseBranch)) =>
       IfStatement(condition, thenBranch, Some(elseBranch))
     case (condition, thenBranch, None) =>
       IfStatement(condition, thenBranch, None)
-  }
+  }.log
 
   // Context-aware assignment parser that resolves variable references using SymbolTable
+  // TODO more coverage ?
   def assignmentWithContext[$: P](symbolTable: SymbolTable): P[Assignment] = P(
-    identifier ~ "<-" ~ variableReference(symbolTable)
+    identifier ~ "<-" ~ (expression | variableReference(symbolTable)) // TODO should just be expression ?
   ).map { case (variable, value) => Assignment(variable, value) }
 
-  // Assignment parser - tries different expression types in order
-  def assignment[$: P]: P[Assignment] = P(
-    identifier ~ "<-" ~ (
-      IntExpressionParser.addSub.map(_.asInstanceOf[Expression]) |
-        expressionString.map(_.asInstanceOf[Expression]) |
-        BooleanExpressionParser.or.map(_.asInstanceOf[Expression])
-    )
-  ).map { case (variable, value) => Assignment(variable, value) }
+  def expression[$: P]: P[Expression] = (
+    IntExpressionParser.addSub | stringExpression | BooleanExpressionParser.or
+  )
+
+  @deprecated("only for testing")
+  def assignment[$: P]: P[Assignment] = assignmentWithContext(SymbolTable())
 
   // Context-aware statement parser
   def statementWithContext[$: P](symbolTable: SymbolTable): P[Statement] =
     (forLoop | ifStatement | print | assignmentWithContext(symbolTable))
 
-  def statement[$: P]: P[Statement] = (forLoop | ifStatement | print | assignment)
+  @deprecated("only for testing")
+  def statement[$: P]: P[Statement] = statementWithContext(SymbolTable())
 
   /** Parse a complete program consisting of algorithm, variables, and statements Uses context-aware
     * parsing to resolve variable references
@@ -122,21 +122,12 @@ object PseudoCodeParser {
     for {
       algoResult <- algo
       varsResult <- variables
+      _ <- StringIn("Début", "Debut", "debut", "Begin", "begin")
       symbolTable = buildSymbolTable(varsResult)
       statements <- statementWithContext(symbolTable).rep
+      _ <- StringIn("Fin", "fin", "End", "end")
     } yield Program(algoResult, varsResult, statements)
 
-  /** Parse a complete program consisting of algorithm, variables, and statements
-    */
-  def program[$: P]: P[Program] =
-    P(
-      algo ~ variables ~
-        StringIn("Début", "debut", "Begin", "begin").log ~
-        statement.rep.log ~
-        StringIn("Fin", "fin", "End", "end")
-    ).map { case (algo, vars, statements) =>
-      Program(algo, vars, statements)
-    }
 
   /** Parse input into a Program object using context-aware parsing
     */

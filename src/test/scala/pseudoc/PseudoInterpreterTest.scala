@@ -182,12 +182,11 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   }
 
   test("assign another variable") {
-    // Use exact format that works in PseudoCodeParserTest
-    val code = "Algorithme: test\nVariables:\ns0: string, s1: string\ns1 <- s0"
+    val code = "Algorithme: test\nVariables:\ns0: string, s1: string\n" +
+      "Début\ns1 <- s0\nFin"
     
     parse(code, programWithContext(_)) match {
       case Parsed.Success(program, index) =>
-        // Extract the assignment statement
         val stmt = program.statements.head
         val vars = VarMap("s0" -> "hello", "s1" -> "" )
         val result = evalWithVars(stmt, vars)
@@ -202,12 +201,14 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     val code =
       """Algorithme: test
         |Variables:
-        |s0: string, s1: string, i0: entier, i1: entier, b0: booléen, b1: booléen
-        |Si Vrai Alors
-        |  s1 <- "hello"
-        |  i1 <- 3
-        |  b1 <- true
-        |Fin Si""".stripMargin
+        |  s0: string, s1: string, i0: entier, i1: entier, b0: booléen, b1: booléen
+        |Début
+        |  Si Vrai Alors
+        |    s1 <- s0 + " world"
+        |    i1 <- i0 + 3
+        |    b1 <- false OU b0
+        |  Fin Si
+        |Fin""".stripMargin
     
     parse(code, programWithContext(_)) match {
       case Parsed.Success(program, index) =>
@@ -218,7 +219,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
         result.vars("s1") should be("hello")
         result.vars("i1") should be(3)
         result.vars("b1") shouldBe true
-      case Parsed.Failure(stack, idx, extra) =>
+      case f@Parsed.Failure(stack, idx, extra) =>
         fail(extra.trace().msg)
     }
   }
@@ -235,8 +236,10 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     val code = 
       """Algorithme: test
         |Variables:
-        |x: booléen
-        |x <- false or true and (x or false)""".stripMargin
+        |  x: booléen
+        |Début
+        |  x <- false or true and (x or false)
+        |Fin""".stripMargin
     
     parse(code, programWithContext(_)) match {
       case Parsed.Success(program, index) =>

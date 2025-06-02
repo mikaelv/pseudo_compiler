@@ -61,7 +61,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
         "Début\n" +
         "  i <- 1\n" +
         "Fin",
-      program(_),
+      programWithContext(_),
       Program(Algorithm("test"), Variables(Seq(VariableDecl("i", IntType))), Seq(Assignment("i", IntLiteral(1))))
     )
   }
