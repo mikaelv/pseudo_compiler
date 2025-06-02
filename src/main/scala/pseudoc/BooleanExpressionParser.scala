@@ -1,14 +1,14 @@
 package pseudoc
 
-import fastparse.JavaWhitespace.*
 import fastparse.*
-import pseudoc.ast.*
-import Lexical.{booleanLiteral, identifier}
+import fastparse.JavaWhitespace.*
+import pseudoc.Lexical.booleanLiteral
 import pseudoc.PseudoCodeParser.variableReference
+import pseudoc.ast.*
 
 object BooleanExpressionParser {
 
-  def or[$: P](implicit symbols: SymbolTable): P[BoolExpression] = P(
+  def boolExpr[$: P](implicit symbols: SymbolTable): P[BoolExpression] = P(
     and ~ (StringIn("or", "OR", "ou", "OU", "||", "|") ~/ and).rep
   ).map(BoolOperations.createOr)
 
@@ -17,11 +17,13 @@ object BooleanExpressionParser {
   ).map(BoolOperations.createAnd)
 
 
-  def parens[$: P](implicit symbols: SymbolTable): P[BoolExpression] = P("(" ~/ or ~ ")")
+  def parens[$: P](implicit symbols: SymbolTable): P[BoolExpression] = P("(" ~/ boolExpr ~ ")")
+
+  def boolRef[$: P](implicit symbols: SymbolTable): P[BoolRef] =
+    variableReference.collect { case b@BoolRef(_) => b }
 
   def boolFactor[$: P](implicit symbols: SymbolTable): P[BoolExpression] =
-    // TODO testcase for _.asInstanceOf
-    (booleanLiteral | comparisonExpr | variableReference.map(_.asInstanceOf[BoolRef]) | parens).log
+    (booleanLiteral | comparisonExpr | boolRef | parens).log
 
   def booleanOperator[$: P]: P[ComparisonOperator] = P(
     StringIn("=", "==").map(_ => ComparisonOperator.Equal) |

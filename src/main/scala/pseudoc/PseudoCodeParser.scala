@@ -4,41 +4,26 @@ import fastparse.*
 import fastparse.JavaWhitespace.*
 import pseudoc.BooleanExpressionParser.{boolFactor, comparisonExpr}
 import pseudoc.IntExpressionParser.integer
-import pseudoc.Lexical.{identifier, ws}
+import pseudoc.Lexical.{identifier, tpe, ws}
+import pseudoc.StringExpressionParser.stringExpression
 import pseudoc.ast.*
 
 object PseudoCodeParser {
 
   // Context-aware variable reference parser
-  def variableReference[$: P](implicit symbolTable: SymbolTable): P[Expression] = identifier.map { varName =>
-    symbolTable.getType(varName) match {
-      case Some(PseudoType.IntType)    => IntRef(varName)
-      case Some(PseudoType.StringType) => StringRef(varName)
-      case Some(PseudoType.BoolType)   => BoolRef(varName)
-      // TODO how to report error ?
-      case None => throw new RuntimeException(s"Undefined variable: $varName")
-    }
+  def variableReference[$: P](implicit symbolTable: SymbolTable): P[Expression] = identifier.map {
+    varName =>
+      symbolTable.getType(varName) match {
+        case Some(PseudoType.IntType)    => IntRef(varName)
+        case Some(PseudoType.StringType) => StringRef(varName)
+        case Some(PseudoType.BoolType)   => BoolRef(varName)
+        // TODO how to report error ?
+        case None => throw new RuntimeException(s"Undefined variable: $varName")
+      }
   }
 
   def algo[$: P]: P[Algorithm] =
     P("Algorithme" ~ ":" ~ identifier).map(Algorithm.apply)
-
-  /** "chaine de caracteres" must be before "chaine" */
-  def typeString[$: P]: P[PseudoType] = P(
-    StringIn(
-      "chaine de caracteres",
-      "chaine de caractères",
-      "chaîne de caractères",
-      "chaîne",
-      "chaine",
-      "string",
-      "str"
-    ).map(_ => PseudoType.StringType) |
-      StringIn("int", "integer", "entier").map(_ => PseudoType.IntType) |
-      StringIn("bool", "boolean", "booléen").map(_ => PseudoType.BoolType)
-  )
-
-  def tpe[$: P]: P[PseudoType] = typeString
 
   def variableDecl[$: P]: P[VariableDecl] =
     P(identifier ~ ":" ~ tpe).map(VariableDecl.apply)
@@ -59,18 +44,6 @@ object PseudoCodeParser {
       integer ~ StringIn("à", "a", "to") ~ integer ~ StringIn("Faire", "do") ~
       statement.rep ~ StringIn("Fin Pour", "fin pour", "End For", "end for")
   ).map(ForLoop.apply)
-
-  def stringChars(c: Char) = c != '\"'
-  def strChars[$: P] = P(CharsWhile(stringChars))
-  // TODO there might be a way to handle escape chars more gracefully
-  def stringLiteral[$: P]: P[String] = P(
-    "\"" ~/ (strChars).rep.! ~ "\""
-  ).map(_.replaceAll("\\\\NL", "\n"))
-
-  def stringExpression[$: P]: P[StringConcat] =
-    (identifier.map(StringRef.apply) | stringLiteral.map(StringLiteral.apply))
-      .rep(sep = "+")
-      .map(StringConcat.apply).log
 
   def print[$: P]: P[FunctionCallString] = P(
     StringIn(
@@ -103,7 +76,7 @@ object PseudoCodeParser {
   ).map { case (variable, value) => Assignment(variable, value) }
 
   def expression[$: P](implicit symbols: SymbolTable): P[Expression] = (
-    IntExpressionParser.addSub | stringExpression | BooleanExpressionParser.or
+    IntExpressionParser.addSub | stringExpression | BooleanExpressionParser.boolExpr
   )
 
   @deprecated("only for testing")
@@ -128,7 +101,6 @@ object PseudoCodeParser {
       statements <- statementWithContext(symbols = symbolTable).rep
       _ <- StringIn("Fin", "fin", "End", "end")
     } yield Program(algoResult, varsResult, statements)
-
 
   /** Parse input into a Program object using context-aware parsing
     */

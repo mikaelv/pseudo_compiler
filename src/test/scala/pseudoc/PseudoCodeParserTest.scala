@@ -226,29 +226,31 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       )
     )
 
+
+
   test("boolean expression"):
     implicit val symbols: SymbolTable = SymbolTable(Map("x" -> BoolType))
     check(
       "true or x",
-      BooleanExpressionParser.or(_),
+      BooleanExpressionParser.boolExpr(_),
       BoolOperations(BoolLiteral(true), (BooleanOperator.Or, BoolRef("x")))
     )
 
     check(
       "x or true",
-      BooleanExpressionParser.or(_),
+      BooleanExpressionParser.boolExpr(_),
       BoolOperations(BoolRef("x"), (BooleanOperator.Or, BoolLiteral(true)))
     )
 
     check(
       "false or true",
-      BooleanExpressionParser.or(_),
+      BooleanExpressionParser.boolExpr(_),
       BoolOperations(BoolLiteral(false), (BooleanOperator.Or, BoolLiteral(true)))
     )
 
     check(
       "false or true and (x or false)",
-      BooleanExpressionParser.or(_),
+      BooleanExpressionParser.boolExpr(_),
       BoolOperations(
         BoolLiteral(false),
         (

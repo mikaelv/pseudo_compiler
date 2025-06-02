@@ -17,7 +17,6 @@ object Lexical {
   def tolerantCases(fr: String, en: String): Seq[String] =
     tolerantCases(fr) ++ tolerantCases(en)
 
-
   def boolTrue[$: P]: P[BoolLiteral] = P(
     StringIn("true", "TRUE", "True", "vrai", "VRAI", "Vrai").!
   ).map(_ => BoolLiteral(true))
@@ -28,12 +27,26 @@ object Lexical {
 
   def booleanLiteral[$: P]: P[BoolLiteral] = P(boolTrue | boolFalse)
 
+  def stringType[$: P]: P[PseudoType.StringType.type] = StringIn(
+    "chaine de caracteres",
+    "chaine de caractères",
+    "chaîne de caractères",
+    "chaîne",
+    "chaine",
+    "string",
+    "str"
+  ).map(_ => PseudoType.StringType)
+  def intType[$: P]: P[PseudoType.IntType.type] =
+    StringIn("int", "integer", "entier").map(_ => PseudoType.IntType)
+  def boolType[$: P]: P[PseudoType.BoolType.type] =
+    StringIn("bool", "boolean", "booléen").map(_ => PseudoType.BoolType)
 
+  def tpe[$: P]: P[PseudoType] = P(stringType | intType | boolType)
 
   // TODO factorize
   val keywords: Set[String] = (
     tolerantCases("si", "if") ++
-    tolerantCases("alors", "then") ++
+      tolerantCases("alors", "then") ++
       tolerantCases("fin", "end") ++
       tolerantCases("ou", "or") ++
       tolerantCases("and", "et")
