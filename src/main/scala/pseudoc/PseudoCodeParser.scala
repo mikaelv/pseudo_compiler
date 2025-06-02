@@ -2,8 +2,8 @@ package pseudoc
 
 import fastparse.*
 import fastparse.JavaWhitespace.*
-import pseudoc.BooleanExpressionParser.{boolFactor, comparisonExpr}
-import pseudoc.IntExpressionParser.integer
+import pseudoc.BooleanExpressionParser.{boolExpr, boolFactor, comparisonExpr}
+import pseudoc.IntExpressionParser.{intExpr, integer}
 import pseudoc.Lexical.{identifier, tpe, ws}
 import pseudoc.StringExpressionParser.stringExpression
 import pseudoc.ast.*
@@ -39,13 +39,13 @@ object PseudoCodeParser {
     }
   }
 
-  def forLoop[$: P] = P(
+  def forLoop[$: P](implicit symbols: SymbolTable): P[ForLoop] = P(
     StringIn("Pour", "For") ~ identifier ~ "<-" ~
       integer ~ StringIn("à", "a", "to") ~ integer ~ StringIn("Faire", "do") ~
-      statement.rep ~ StringIn("Fin Pour", "fin pour", "End For", "end for")
+      statementWithContext.rep ~ StringIn("Fin Pour", "fin pour", "End For", "end for")
   ).map(ForLoop.apply)
 
-  def print[$: P]: P[FunctionCallString] = P(
+  def print[$: P](implicit symbols: SymbolTable): P[FunctionCallString] = P(
     StringIn(
       "Ecrire",
       "ecrire",
@@ -70,24 +70,19 @@ object PseudoCodeParser {
   }.log
 
   // Context-aware assignment parser that resolves variable references using SymbolTable
-  // TODO more coverage ?
   def assignmentWithContext[$: P](implicit symbols: SymbolTable): P[Assignment] = P(
     identifier ~ "<-" ~ expression
   ).map { case (variable, value) => Assignment(variable, value) }
 
   def expression[$: P](implicit symbols: SymbolTable): P[Expression] = (
-    IntExpressionParser.addSub | stringExpression | BooleanExpressionParser.boolExpr
+    intExpr | stringExpression | boolExpr
   )
 
-  @deprecated("only for testing")
-  def assignment[$: P]: P[Assignment] = assignmentWithContext(symbols = SymbolTable())
 
   // Context-aware statement parser
   def statementWithContext[$: P](implicit symbols: SymbolTable): P[Statement] =
     (forLoop | ifStatement | print | assignmentWithContext)
 
-  @deprecated("only for testing")
-  def statement[$: P]: P[Statement] = statementWithContext(symbols = SymbolTable()).log
 
   /** Parse a complete program consisting of algorithm, variables, and statements Uses context-aware
     * parsing to resolve variable references

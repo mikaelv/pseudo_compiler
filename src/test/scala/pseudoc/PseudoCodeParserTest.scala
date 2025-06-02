@@ -9,7 +9,7 @@ import pseudoc.BooleanExpressionParser.comparisonExpr
 import pseudoc.Lexical.identifier
 import pseudoc.ast.*
 import pseudoc.PseudoType
-import pseudoc.PseudoType.{BoolType, IntType}
+import pseudoc.PseudoType.{BoolType, IntType, StringType}
 
 class PseudoCodeParserTest extends AnyFunSuiteLike:
   def check[A](
@@ -19,6 +19,9 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
   ): Assertion =
     val result = parse(str, myParser(_))
     result.get.value should ===(expectedValue)
+
+  def assignment[$: P]: P[Assignment] = assignmentWithContext(symbols = SymbolTable())
+
 
   test("identifier"):
     check("test123 \nblah :\n", identifier(_), "test123")
@@ -67,6 +70,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
   }
 
   test("for loop"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("i" -> IntType))
     check(
       "Pour i <- 1 à 10 Faire\nFin Pour",
       forLoop(_),
@@ -74,6 +78,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     )
 
   test("write"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("a" -> StringType, "b" -> StringType))
     check(
       "Write(a + \"hello\" + b + \"world\")",
       print(_),
@@ -207,9 +212,10 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     )
 
   test("variable assignment with string"):
+    implicit val symbols: SymbolTable = SymbolTable()
     check(
       "message <- \"Hello, world!\"",
-      assignment(_),
+      assignmentWithContext(_),
       Assignment(
         "message",
         StringConcat(Seq(StringLiteral("Hello, world!")))
@@ -217,9 +223,10 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     )
 
   test("variable assignment with concatenation"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("name" -> StringType))
     check(
       "greeting <- \"Hello, \" + name",
-      assignment(_),
+      assignmentWithContext(_),
       Assignment(
         "greeting",
         StringConcat(Seq(StringLiteral("Hello, "), StringRef("name")))

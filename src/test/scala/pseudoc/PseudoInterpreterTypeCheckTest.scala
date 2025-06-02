@@ -1,12 +1,16 @@
 package pseudoc
 
-import org.scalatest._
-import org.scalatest.matchers.should._
-import org.scalatest.wordspec._
-import pseudoc.ast._
+import fastparse.P
+import org.scalatest.*
+import org.scalatest.matchers.should.*
+import org.scalatest.wordspec.*
+import pseudoc.PseudoCodeParser.assignmentWithContext
+import pseudoc.ast.*
 import pseudoc.PseudoType
 
 class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
+  def assignment[$: P]: P[Assignment] = assignmentWithContext(symbols = SymbolTable())
+
 
   "PseudoInterpreter with type checking" should {
     "successfully parse, type check and execute valid programs" in {
@@ -56,7 +60,7 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       val invalidInput = "x <- 10 +"
       
       // Try to parse just this expression
-      val parseResult = parse(invalidInput, PseudoCodeParser.assignment(_))
+      val parseResult = parse(invalidInput, assignment(_))
       
       // Should be a parse failure
       parseResult match {

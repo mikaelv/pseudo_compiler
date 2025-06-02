@@ -12,7 +12,7 @@ object IntExpressionParser {
   def digits[$: P]: P[Unit] = P(CharsWhileIn("0-9"))
   def integer[$: P]: P[IntLiteral] = digits.!.map(s => IntLiteral(s.toInt))
 
-  def addSub[$: P](implicit symbols: SymbolTable): P[IntExpression] =
+  def intExpr[$: P](implicit symbols: SymbolTable): P[IntExpression] =
     P(multDiv ~ (CharIn("+\\-").! ~ multDiv).rep).map(IntAddSub.create)
 
   def multDiv[$: P](implicit symbols: SymbolTable): P[IntExpression] =
@@ -20,7 +20,7 @@ object IntExpressionParser {
 
   def factor[$: P](implicit symbols: SymbolTable): P[IntExpression] = P(intFactor | parens)
 
-  def parens[$: P](implicit symbols: SymbolTable): P[IntExpression] = P("(" ~ addSub ~ ")")
+  def parens[$: P](implicit symbols: SymbolTable): P[IntExpression] = P("(" ~ intExpr ~ ")")
 
   def intRef[$: P](implicit symbols: SymbolTable): P[IntRef] = variableReference.collect {
     case i @ IntRef(_) => i

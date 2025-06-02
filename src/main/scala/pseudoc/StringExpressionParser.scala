@@ -2,7 +2,8 @@ package pseudoc
 import fastparse.*
 import JavaWhitespace.*
 import pseudoc.Lexical.identifier
-import pseudoc.ast.{FunctionCallString, StringConcat, StringLiteral, StringRef}
+import pseudoc.PseudoCodeParser.variableReference
+import pseudoc.ast.{BoolRef, FunctionCallString, StringConcat, StringLiteral, StringRef}
 
 object StringExpressionParser {
   def stringChars(c: Char): Boolean = c != '\"'
@@ -14,12 +15,16 @@ object StringExpressionParser {
     "\"" ~/ (strChars).rep.! ~ "\""
   ).map(_.replaceAll("\\\\NL", "\n"))
 
-  def stringExpression[$: P]: P[StringConcat] =
-    (identifier.map(StringRef.apply) | stringLiteral.map(StringLiteral.apply))
+  def stringRef[$: P](implicit symbols: SymbolTable): P[StringRef] =
+    variableReference.collect { case s@StringRef(_) => s }
+
+
+  def stringExpression[$: P](implicit symbols: SymbolTable): P[StringConcat] =
+    (stringRef | stringLiteral.map(StringLiteral.apply))
       .rep(sep = "+")
       .map(StringConcat.apply).log
 
-  def print[$: P]: P[FunctionCallString] = P(
+  def print[$: P](implicit symbols: SymbolTable): P[FunctionCallString] = P(
     StringIn(
       "Ecrire",
       "ecrire",
