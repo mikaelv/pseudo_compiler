@@ -1,6 +1,7 @@
 package pseudoc
 
 case class VarMap(v: Map[String, (Class[_], Any)]) {
+  // TODO one Map per type ?
   def apply(variable: String): Any = {
     v.apply(variable)._2
   }

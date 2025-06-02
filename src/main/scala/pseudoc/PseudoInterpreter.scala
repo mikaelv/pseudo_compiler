@@ -133,7 +133,6 @@ object PseudoInterpreter {
           case ComparisonOperator.GreaterThanEqual => leftVal >= rightVal
   }
 
-  // TODO move vars to a class with one Map per type
   def evalIntExpr(expr: IntExpression, vars: VarMap): Int =
     expr match
       case IntRef(varName)   => vars(varName).asInstanceOf[Int]
