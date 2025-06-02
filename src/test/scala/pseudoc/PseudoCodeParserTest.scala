@@ -9,7 +9,7 @@ import pseudoc.BooleanExpressionParser.comparisonExpr
 import pseudoc.Lexical.identifier
 import pseudoc.ast.*
 import pseudoc.PseudoType
-import pseudoc.PseudoType.{BoolType, IntType, StringType}
+import pseudoc.PseudoType.{ArrayIntType, BoolType, IntType, StringType}
 
 class PseudoCodeParserTest extends AnyFunSuiteLike:
   def check[A](
@@ -330,6 +330,75 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
               )
             )
           )
+        )
+      )
+    )
+  }
+
+  test("array literal parsing") {
+    implicit val symbols: SymbolTable = SymbolTable(Map("arr" -> ArrayIntType))
+    check(
+      "arr <- {1, 2, 3, 4, 5}",
+      assignment(_),
+      Assignment("arr", ArrayLiteral(Seq(IntLiteral(1), IntLiteral(2), IntLiteral(3), IntLiteral(4), IntLiteral(5))))
+    )
+  }
+
+  test("empty array literal parsing") {
+    implicit val symbols: SymbolTable = SymbolTable(Map("arr" -> ArrayIntType))
+    check(
+      "arr <- {}",
+      assignment(_),
+      Assignment("arr", ArrayLiteral(Seq()))
+    )
+  }
+
+  test("array access expression parsing") {
+    implicit val symbols: SymbolTable = SymbolTable(Map("arr" -> ArrayIntType))
+    check(
+      "arr[2]",
+      IntExpressionParser.arrayAccess(_),
+      ArrayAccess(ArrayRef("arr"), IntLiteral(2))
+    )
+  }
+
+  test("array access in integer expression") {
+    implicit val symbols: SymbolTable = SymbolTable(Map("arr" -> ArrayIntType))
+    check(
+      "arr[2]",
+      IntExpressionParser.intExpr(_),
+      ArrayAccess(ArrayRef("arr"), IntLiteral(2))
+    )
+  }
+
+  test("array access assignment") {
+    implicit val symbols: SymbolTable = SymbolTable(Map("arr" -> ArrayIntType, "x" -> IntType))
+    check(
+      "x <- arr[2]",
+      assignment(_),
+      Assignment("x", ArrayAccess(ArrayRef("arr"), IntLiteral(2)))
+    )
+  }
+
+  test("array access with variable index") {
+    implicit val symbols: SymbolTable = SymbolTable(Map("arr" -> ArrayIntType, "index" -> IntType, "x" -> IntType))
+    check(
+      "x <- arr[index]",
+      assignment(_),
+      Assignment("x", ArrayAccess(ArrayRef("arr"), IntRef("index")))
+    )
+  }
+
+  test("array access in arithmetic expression") {
+    implicit val symbols: SymbolTable = SymbolTable(Map("arr" -> ArrayIntType, "result" -> IntType))
+    check(
+      "result <- arr[1] + arr[3] * 2",
+      assignment(_),
+      Assignment(
+        "result",
+        IntAddSub(
+          ArrayAccess(ArrayRef("arr"), IntLiteral(1)),
+          Seq((AddSubOperator.Add, IntMultDiv(ArrayAccess(ArrayRef("arr"), IntLiteral(3)), Seq((MultDivOperator.Mult, IntLiteral(2))))))
         )
       )
     )

@@ -15,6 +15,7 @@ case class VarMap(v: Map[String, (Class[_], Any)]) {
                         (tpe == classOf[java.lang.Integer] && value.getClass == classOf[Int]) ||
                         (tpe == classOf[Boolean] && value.getClass == classOf[java.lang.Boolean]) ||
                         (tpe == classOf[java.lang.Boolean] && value.getClass == classOf[Boolean]) ||
+                        (tpe == classOf[Array[Int]] && value.getClass == classOf[Array[Int]]) ||
                         (tpe == value.getClass)
       
       if (!isCompatible)

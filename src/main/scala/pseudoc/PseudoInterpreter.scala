@@ -52,6 +52,7 @@ object PseudoInterpreter {
         case PseudoType.StringType => ""
         case PseudoType.IntType => 0
         case PseudoType.BoolType => false
+        case PseudoType.ArrayIntType => Array.empty[Int]
       }
       
       (varDecl.name, initialValue)
@@ -119,6 +120,7 @@ object PseudoInterpreter {
 
   def evalExpr(expr: Expression, vars: VarMap): Any = {
     expr match {
+      case a:ArrayExpression => evalArrayExpr(a, vars)
       case b:BoolExpression => evalBoolExpr(b, vars)
       case i:IntExpression => evalIntExpr(i, vars)
       case s:StringExpression => evalStringExpr(s, vars)
@@ -154,6 +156,10 @@ object PseudoInterpreter {
     expr match
       case IntRef(varName)   => vars(varName).asInstanceOf[Int]
       case IntLiteral(value) => value
+      case ArrayAccess(arrayExpr, indexExpr) =>
+        val array = evalArrayExpr(arrayExpr, vars)
+        val index = evalIntExpr(indexExpr, vars)
+        array(index)
       case IntMultDiv(base, ops) =>
         ops.foldLeft(evalIntExpr(base, vars)) { case (left, (op, right)) =>
           op match
@@ -175,6 +181,16 @@ object PseudoInterpreter {
       case StringConcat(values) =>
         values.map(e => evalStringExpr(e, vars)).mkString
 
+  def evalArrayExpr(expr: ArrayExpression, vars: VarMap): Array[Int] =
+    expr match
+      case ArrayRef(varName) => 
+        val value = vars(varName)
+        value match {
+          case arr: Array[Int] => arr
+          case _ => throw new RuntimeException(s"Variable '$varName' is not an array, found ${value.getClass}")
+        }
+      case ArrayLiteral(values) => values.map(evalIntExpr(_, vars)).toArray
+
   def evalAssign(assign: Assignment, vars: VarMap): VarMap = {
     // Check if variable exists
     if (!vars.contains(assign.variable))
@@ -185,6 +201,7 @@ object PseudoInterpreter {
       case expr: StringExpression => evalStringExpr(expr, vars)
       case expr: IntExpression    => evalIntExpr(expr, vars)
       case expr: BoolExpression   => evalBoolExpr(expr, vars)
+      case expr: ArrayExpression  => evalArrayExpr(expr, vars)
       case _ => throw new RuntimeException(s"Unsupported expression type: ${assign.value.getClass}")
     }
 

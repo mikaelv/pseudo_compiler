@@ -11,11 +11,13 @@ object PseudoType {
   case object IntType extends PseudoType { val name = "int" }
   case object StringType extends PseudoType { val name = "string" }
   case object BoolType extends PseudoType { val name = "boolean" }
+  case object ArrayIntType extends PseudoType { val name = "arrayint" }
   
   def fromClass(clazz: Class[_]): PseudoType = clazz match {
     case c if c == classOf[Int] || c == classOf[java.lang.Integer] => IntType
     case c if c == classOf[String] => StringType
     case c if c == classOf[Boolean] || c == classOf[java.lang.Boolean] => BoolType
+    case c if c == classOf[Array[Int]] => ArrayIntType
     case _ => throw new IllegalArgumentException(s"Unsupported type: ${clazz.getSimpleName}")
   }
   
@@ -23,6 +25,7 @@ object PseudoType {
     case IntType => classOf[Int]
     case StringType => classOf[String]
     case BoolType => classOf[Boolean]
+    case ArrayIntType => classOf[Array[Int]]
   }
 }
 
@@ -82,5 +85,10 @@ case class SymbolTable(types: Map[String, PseudoType] = Map.empty) {
   // Special case for boolean variables - this helps with the tests
   def checkBoolVariable(variable: String): Either[String, Unit] = {
     checkVariableForType(variable, PseudoType.BoolType).map(_ => ())
+  }
+  
+  // Special case for array of integer variables
+  def checkArrayIntVariable(variable: String): Either[String, Unit] = {
+    checkVariableForType(variable, PseudoType.ArrayIntType).map(_ => ())
   }
 }

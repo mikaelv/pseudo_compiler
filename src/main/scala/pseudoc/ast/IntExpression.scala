@@ -85,3 +85,12 @@ object IntAddSub {
         }
       )
 }
+
+case class ArrayAccess(arrayExpr: ArrayExpression, indexExpr: IntExpression) extends IntExpression {
+  override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = {
+    val arrayResult = arrayExpr.typeCheck(symbolTable)
+    val indexResult = indexExpr.typeCheck(symbolTable)
+    val errors = Seq(arrayResult, indexResult).collect { case Left(error) => error }
+    if (errors.isEmpty) Right(()) else Left(errors.mkString("\n"))
+  }
+}

@@ -2,6 +2,7 @@ package pseudoc
 
 import fastparse.*
 import fastparse.JavaWhitespace.*
+import pseudoc.ArrayExpressionParser.arrayExpr
 import pseudoc.BooleanExpressionParser.{boolExpr, boolFactor, comparisonExpr}
 import pseudoc.IntExpressionParser.{intExpr, intLiteral}
 import pseudoc.Lexical.{identifier, lineFeed, spaceLF, tpe}
@@ -14,9 +15,10 @@ object PseudoCodeParser {
   def variableReference[$: P](implicit symbolTable: SymbolTable): P[Expression] = identifier.map {
     varName =>
       symbolTable.getType(varName) match {
-        case Some(PseudoType.IntType)    => IntRef(varName)
-        case Some(PseudoType.StringType) => StringRef(varName)
-        case Some(PseudoType.BoolType)   => BoolRef(varName)
+        case Some(PseudoType.IntType)     => IntRef(varName)
+        case Some(PseudoType.StringType)  => StringRef(varName)
+        case Some(PseudoType.BoolType)    => BoolRef(varName)
+        case Some(PseudoType.ArrayIntType) => ArrayRef(varName)
         // TODO how to report error ?
         case None => throw new RuntimeException(s"Undefined variable: $varName")
       }
@@ -68,7 +70,7 @@ object PseudoCodeParser {
   ).map { case (variable, value) => Assignment(variable, value) }
 
   def expression[$: P](implicit symbols: SymbolTable): P[Expression] = (
-    intExpr | stringExpression | boolExpr
+    intExpr | arrayExpr | stringExpression | boolExpr
   )
 
   // Context-aware statement parser

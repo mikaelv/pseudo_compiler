@@ -5,7 +5,7 @@ import org.scalatest.funsuite.AnyFunSuiteLike
 import org.scalatest.matchers.should.Matchers
 import pseudoc.PseudoCodeParser.*
 import pseudoc.PseudoInterpreter.{eval, evalWithVars}
-import pseudoc.PseudoType.{BoolType, IntType}
+import pseudoc.PseudoType.{ArrayIntType, BoolType, IntType}
 import pseudoc.ast.*
 
 class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
@@ -269,4 +269,164 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
       case Parsed.Failure(stack, idx, extra) =>
         fail(extra.trace().msg)
     }
+  }
+
+  test("array literal assignment") {
+    val code = 
+      """Algorithme: test
+        |Variables:
+        |  arr: arrayint
+        |Début
+        |  arr <- {1, 2, 3, 4, 5}
+        |Fin""".stripMargin
+
+    parse(code, program(_)) match {
+      case Parsed.Success(program, index) =>
+        val stmt = program.statements.head
+        val vars = VarMap("arr" -> Array.empty[Int])
+        val result = evalWithVars(stmt, vars)
+        val resultArray = result.vars("arr").asInstanceOf[Array[Int]]
+        resultArray should be(Array(1, 2, 3, 4, 5))
+      case Parsed.Failure(stack, idx, extra) =>
+        fail(extra.trace().msg)
+    }
+  }
+
+  test("array access") {
+    val code = 
+      """Algorithme: test
+        |Variables:
+        |  arr: arrayint
+        |  x: entier
+        |Début
+        |  arr <- {10, 20, 30, 40, 50}
+        |  x <- arr[2]
+        |Fin""".stripMargin
+
+    parse(code, program(_)) match {
+      case Parsed.Success(program, index) =>
+        val vars = VarMap("arr" -> Array.empty[Int], "x" -> 0)
+        val result = program.statements.foldLeft(EvalResult(TestConsoleOutput(), vars)) { (res, stmt) =>
+          evalWithVars(stmt, res.vars, res.console)
+        }
+        result.vars("x") should be(30) // Arrays are 0-indexed, so arr[2] = 30
+      case Parsed.Failure(stack, idx, extra) =>
+        fail(extra.trace().msg)
+    }
+  }
+
+  test("array with variable assignment") {
+    val code = 
+      """Algorithme: test
+        |Variables:
+        |  source: arrayint
+        |  target: arrayint
+        |Début
+        |  source <- {100, 200, 300}
+        |  target <- source
+        |Fin""".stripMargin
+
+    parse(code, program(_)) match {
+      case Parsed.Success(program, index) =>
+        val vars = VarMap("source" -> Array.empty[Int], "target" -> Array.empty[Int])
+        val result = program.statements.foldLeft(EvalResult(TestConsoleOutput(), vars)) { (res, stmt) =>
+          evalWithVars(stmt, res.vars, res.console)
+        }
+        val targetArray = result.vars("target").asInstanceOf[Array[Int]]
+        targetArray should be(Array(100, 200, 300))
+      case Parsed.Failure(stack, idx, extra) =>
+        fail(extra.trace().msg)
+    }
+  }
+
+  test("array access in arithmetic expression") {
+    val code = 
+      """Algorithme: test
+        |Variables:
+        |  arr: arrayint
+        |  result: entier
+        |Début
+        |  arr <- {5, 10, 15, 20}
+        |  result <- arr[1] + arr[3] * 2
+        |Fin""".stripMargin
+
+    parse(code, program(_)) match {
+      case Parsed.Success(program, index) =>
+        val vars = VarMap("arr" -> Array.empty[Int], "result" -> 0)
+        val result = program.statements.foldLeft(EvalResult(TestConsoleOutput(), vars)) { (res, stmt) =>
+          evalWithVars(stmt, res.vars, res.console)
+        }
+        result.vars("result") should be(50) // arr[1] + arr[3] * 2 = 10 + 20 * 2 = 50
+      case Parsed.Failure(stack, idx, extra) =>
+        fail(extra.trace().msg)
+    }
+  }
+
+  test("array access with variable index") {
+    val code = 
+      """Algorithme: test
+        |Variables:
+        |  arr: arrayint
+        |  index: entier
+        |  value: entier
+        |Début
+        |  arr <- {7, 14, 21, 28, 35}
+        |  index <- 3
+        |  value <- arr[index]
+        |Fin""".stripMargin
+
+    parse(code, program(_)) match {
+      case Parsed.Success(program, index) =>
+        val vars = VarMap("arr" -> Array.empty[Int], "index" -> 0, "value" -> 0)
+        val result = program.statements.foldLeft(EvalResult(TestConsoleOutput(), vars)) { (res, stmt) =>
+          evalWithVars(stmt, res.vars, res.console)
+        }
+        result.vars("value") should be(28) // arr[3] = 28
+      case Parsed.Failure(stack, idx, extra) =>
+        fail(extra.trace().msg)
+    }
+  }
+
+  test("empty array literal") {
+    val code = 
+      """Algorithme: test
+        |Variables:
+        |  arr: arrayint
+        |Début
+        |  arr <- {}
+        |Fin""".stripMargin
+
+    parse(code, program(_)) match {
+      case Parsed.Success(program, index) =>
+        val stmt = program.statements.head
+        val vars = VarMap("arr" -> Array.empty[Int])
+        val result = evalWithVars(stmt, vars)
+        val resultArray = result.vars("arr").asInstanceOf[Array[Int]]
+        resultArray should be(Array.empty[Int])
+      case Parsed.Failure(stack, idx, extra) =>
+        fail(extra.trace().msg)
+    }
+  }
+
+  test("array type checking - compatible assignment") {
+    val vars = VarMap("arr" -> Array.empty[Int])
+    val assignment = Assignment("arr", ArrayLiteral(Seq(IntLiteral(1), IntLiteral(2), IntLiteral(3))))
+    val result = evalWithVars(assignment, vars, TestConsoleOutput())
+
+    val resultArray = result.vars("arr").asInstanceOf[Array[Int]]
+    resultArray should be(Array(1, 2, 3))
+    result.console.getOutput should be("")
+  }
+
+  test("array type checking - incompatible assignment") {
+    val vars = VarMap("x" -> 0) // x is an int, not an array
+    val assignment = Assignment("x", ArrayLiteral(Seq(IntLiteral(1), IntLiteral(2))))
+
+    val exception = intercept[RuntimeException] {
+      evalWithVars(assignment, vars, TestConsoleOutput())
+    }
+
+    exception.getMessage should include("Type error")
+    exception.getMessage should include("Array")
+    exception.getMessage should include("x")
   }

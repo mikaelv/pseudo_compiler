@@ -54,8 +54,10 @@ object Lexical {
     StringIn("int", "integer", "entier").map(_ => PseudoType.IntType)
   def boolType[$: P]: P[PseudoType.BoolType.type] =
     StringIn("bool", "boolean", "booléen").map(_ => PseudoType.BoolType)
+  def arrayIntType[$: P]: P[PseudoType.ArrayIntType.type] =
+    StringIn("tableau[entier]", "array[int]", "arrayint").map(_ => PseudoType.ArrayIntType)
 
-  def tpe[$: P]: P[PseudoType] = P(stringType | intType | boolType)
+  def tpe[$: P]: P[PseudoType] = P(arrayIntType | stringType | intType | boolType)
 
   // TODO factorize
   val keywords: Set[String] = (

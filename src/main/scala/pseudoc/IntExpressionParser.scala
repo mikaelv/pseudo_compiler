@@ -2,10 +2,11 @@ package pseudoc
 
 import fastparse.{CharIn, P}
 import pseudoc.Lexical.identifier
-import pseudoc.ast.{IntAddSub, IntExpression, IntLiteral, IntMultDiv, IntRef}
+import pseudoc.ast.{ArrayAccess, ArrayRef, IntAddSub, IntExpression, IntLiteral, IntMultDiv, IntRef}
 import fastparse.*
 import JavaWhitespace.*
 import pseudoc.PseudoCodeParser.variableReference
+import pseudoc.PseudoType
 
 object IntExpressionParser {
 
@@ -26,7 +27,11 @@ object IntExpressionParser {
     case i @ IntRef(_) => i
   }
 
+  def arrayAccess[$: P](implicit symbols: SymbolTable): P[ArrayAccess] = P(
+    (identifier ~ "[" ~ intExpr ~ "]").filter { case (name, _) => symbols.getType(name).contains(PseudoType.ArrayIntType) }
+  ).map { case (arrayName, index) => ArrayAccess(ArrayRef(arrayName), index) }
+
   def intFactor[$: P](implicit symbols: SymbolTable): P[IntExpression] =
-    (intLiteral | intRef)
+    (intLiteral | arrayAccess | intRef)
 
 }
