@@ -25,12 +25,12 @@ object PseudoCodeParser {
   def algo[$: P]: P[Algorithm] =
     P("Algorithme" ~ ":" ~ identifier).map(Algorithm.apply)
 
-  def variableDecl[$: P]: P[VariableDecl] =
-    P(identifier ~ ":" ~ tpe).map(VariableDecl.apply)
+  def variableDecl[$: P]: P[Variables] =
+    P(identifier.rep(1, sep=",") ~ ":" ~ tpe).map((varNames, tpe) => Variables(varNames.map(varName => VariableDecl(varName, tpe))))
 
   def variables[$: P]: P[Variables] = P(
     ("Variables" ~ ":") ~ variableDecl.rep(sep = ",")
-  ).map(Variables.apply)
+  ).map(Variables.fromSeq)
 
   // Helper function to build SymbolTable from Variables
   def buildSymbolTable(vars: Variables): SymbolTable = {

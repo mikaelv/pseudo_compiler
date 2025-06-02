@@ -35,7 +35,8 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check("Algorithme  :algo2", algo(_), Algorithm("algo2"))
 
   test("string variable"):
-    check("chaine1: chaîne", variableDecl(_), VariableDecl("chaine1", PseudoType.StringType))
+    check("chaine1: chaîne", variableDecl(_),
+      Variables(Seq(VariableDecl("chaine1", PseudoType.StringType))))
 
   test("variables"):
     check(
@@ -43,6 +44,16 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       variables(_),
       Variables(Seq(VariableDecl("chaine1", PseudoType.StringType)))
     )
+
+    check(
+      "Variables:\nchaine1, chaine2: string",
+      variables(_),
+      Variables(Seq(
+        VariableDecl("chaine1", PseudoType.StringType),
+        VariableDecl("chaine2", PseudoType.StringType)
+      ))
+    )
+
 
     check(
       "Variables:\n chaine1: chaîne, i: entier, chaine3: string",
@@ -55,6 +66,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
         )
       )
     )
+
 
   test("program") {
     check(

@@ -1,5 +1,7 @@
 package pseudoc.ast
 
+import pseudoc.ast
+
 // Immutable console output interface
 trait ConsoleOutput {
   def print(text: String): ConsoleOutput
@@ -12,7 +14,7 @@ case class DefaultConsoleOutput(output: String = "") extends ConsoleOutput {
     scala.Predef.print(text)
     DefaultConsoleOutput(output + text)
   }
-  
+
   def getOutput: String = output
 }
 
@@ -21,19 +23,20 @@ case class TestConsoleOutput(output: String = "") extends ConsoleOutput {
   def print(text: String): ConsoleOutput = {
     TestConsoleOutput(output + text)
   }
-  
+
   def getOutput: String = output
 }
 
 case class Algorithm(name: String) extends Ast
 case class Variables(vars: Seq[VariableDecl])
+object Variables {
+  def fromSeq(seq: Seq[Variables]): Variables =
+    seq.foldLeft(new Variables(Seq.empty)) { case (res, vars) =>
+      new ast.Variables(res.vars ++ vars.vars)
+    }
+}
 case class VariableDecl(name: String, tpe: pseudoc.PseudoType)
-
 
 sealed trait Ast {}
 
-object Ast {
-
-
-
-}
+object Ast {}
