@@ -4,7 +4,7 @@ import fastparse.*
 import fastparse.JavaWhitespace.*
 import pseudoc.BooleanExpressionParser.{boolExpr, boolFactor, comparisonExpr}
 import pseudoc.IntExpressionParser.{intExpr, intLiteral}
-import pseudoc.Lexical.{identifier, tpe, ws}
+import pseudoc.Lexical.{identifier, lineFeed, spaceLF, tpe}
 import pseudoc.StringExpressionParser.stringExpression
 import pseudoc.ast.*
 
@@ -25,11 +25,15 @@ object PseudoCodeParser {
   def algo[$: P]: P[Algorithm] =
     P("Algorithme" ~ ":" ~ identifier).map(Algorithm.apply)
 
+  /** syntax: ```s0, s1, s2: string``` */
   def variableDecl[$: P]: P[Variables] =
-    P(identifier.rep(1, sep=",") ~ ":" ~ tpe).map((varNames, tpe) => Variables(varNames.map(varName => VariableDecl(varName, tpe))))
+    P(identifier.rep(1, sep=",") ~ ":" ~ tpe).map((varNames, tpe) =>
+      Variables(varNames.map(varName => VariableDecl(varName, tpe)))).log
 
+  /** One line per type */
   def variables[$: P]: P[Variables] = P(
-    ("Variables" ~ ":") ~ variableDecl.rep(sep = ",")
+    // repX to prevent \n being consumed by JavaWhiteSpace
+    ("Variables" ~ ":") ~ variableDecl.repX(sep=lineFeed)
   ).map(Variables.fromSeq)
 
   // Helper function to build SymbolTable from Variables
@@ -47,9 +51,9 @@ object PseudoCodeParser {
 
 
   def ifStatement[$: P](implicit symbols: SymbolTable): P[IfStatement] = P(
-    StringIn("Si", "If") ~~ ws ~ boolFactor ~
-      StringIn("Alors", "Then") ~~ ws ~ statement.rep ~
-      (StringIn("Sinon", "Else") ~~ ws ~ statement.rep).? ~
+    StringIn("Si", "If") ~~ spaceLF ~ boolFactor ~
+      StringIn("Alors", "Then") ~~ spaceLF ~ statement.rep ~
+      (StringIn("Sinon", "Else") ~~ spaceLF ~ statement.rep).? ~
       StringIn("Fin Si", "End If")
   ).map {
     case (condition, thenBranch, Some(elseBranch)) =>
@@ -68,8 +72,8 @@ object PseudoCodeParser {
   )
 
   // Context-aware statement parser
-  def statement[$: P](implicit symbols: SymbolTable): P[Statement] =
-    (forLoop | ifStatement | StringExpressionParser.print | assignment)
+  def statement[$: P](implicit symbols: SymbolTable): P[Statement] = P(
+    (forLoop | ifStatement | StringExpressionParser.print | assignment))
 
   /** Parse a complete program consisting of algorithm, variables, and statements Uses context-aware
     * parsing to resolve variable references

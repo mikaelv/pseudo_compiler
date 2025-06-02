@@ -195,7 +195,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   }
 
   test("assign another variable") {
-    val code = "Algorithme: test\nVariables:\ns0: string, s1: string\n" +
+    val code = "Algorithme: test\nVariables:\ns0, s1: string\n" +
       "Début\ns1 <- s0\nFin"
 
     parse(code, program(_)) match {
@@ -214,7 +214,9 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     val code =
       """Algorithme: test
         |Variables:
-        |  s0: string, s1: string, i0: entier, i1: entier, b0: booléen, b1: booléen
+        |  s0, s1: string
+        |  i0, i1: entier
+        |  b0, b1: booléen
         |Début
         |  Si Vrai Alors
         |    s1 <- s0 + " world"

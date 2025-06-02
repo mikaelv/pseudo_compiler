@@ -9,7 +9,10 @@ object Lexical {
   def identifier[$: P]: P[String] =
     (CharIn("a-zA-Z") ~ CharIn("a-zA-Z_0-9").rep).!.filter(!keywords.contains(_))
 
-  def ws[$: P]: P[Unit] = CharIn(" \n\t")
+  def space[$: P]: P[Unit] = P(CharIn(" \t"))
+  def spaceLF[$: P]: P[Unit] = P(CharIn(" \r\n\t"))
+
+  def lineFeed[$: P]: P[Unit] = P(space.rep ~ CharIn("\n", "\r").rep(1) ~ spaceLF.rep)
 
   def tolerantCases(s: String): Seq[String] =
     Seq(s, s.head.toUpper + s.tail, s.toUpperCase)

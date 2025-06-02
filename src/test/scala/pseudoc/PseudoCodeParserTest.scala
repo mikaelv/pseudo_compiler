@@ -38,7 +38,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check("chaine1: chaîne", variableDecl(_),
       Variables(Seq(VariableDecl("chaine1", PseudoType.StringType))))
 
-  test("variables"):
+  test("variables on one line"):
     check(
       "Variables:\nchaine1: string",
       variables(_),
@@ -55,17 +55,22 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     )
 
 
+
+  test("variables on multiple lines"):
     check(
-      "Variables:\n chaine1: chaîne, i: entier, chaine3: string",
+      "Variables:\nchaine1, chaine2: string \r\n i1, i2: entier",
       variables(_),
-      Variables(
-        Seq(
-          VariableDecl("chaine1", PseudoType.StringType),
-          VariableDecl("i", PseudoType.IntType),
-          VariableDecl("chaine3", PseudoType.StringType)
-        )
-      )
+      Variables(Seq(
+        VariableDecl("chaine1", PseudoType.StringType),
+        VariableDecl("chaine2", PseudoType.StringType),
+        VariableDecl("i1", PseudoType.IntType),
+        VariableDecl("i2", PseudoType.IntType),
+
+      ))
     )
+
+
+
 
 
   test("program") {
