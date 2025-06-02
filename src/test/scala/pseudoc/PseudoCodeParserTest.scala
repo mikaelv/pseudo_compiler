@@ -70,7 +70,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check(
       "Pour i <- 1 à 10 Faire\nFin Pour",
       forLoop(_),
-      ForLoop("i", 1, 10, Seq())
+      ForLoop("i", IntLiteral(1), IntLiteral(10), Seq())
     )
 
   test("write"):

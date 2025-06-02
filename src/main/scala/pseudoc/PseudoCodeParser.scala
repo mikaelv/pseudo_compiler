@@ -109,11 +109,11 @@ object PseudoCodeParser {
   def assignment[$: P]: P[Assignment] = assignmentWithContext(SymbolTable())
 
   // Context-aware statement parser
-  def statementWithContext[$: P](symbolTable: SymbolTable): P[Statement] =
-    (forLoop | ifStatement | print | assignmentWithContext(symbolTable))
+  def statementWithContext[$: P](implicit symbols: SymbolTable): P[Statement] =
+    (forLoop | ifStatement | print | assignmentWithContext(symbols))
 
   @deprecated("only for testing")
-  def statement[$: P]: P[Statement] = statementWithContext(SymbolTable()).log
+  def statement[$: P]: P[Statement] = statementWithContext(symbols = SymbolTable()).log
 
   /** Parse a complete program consisting of algorithm, variables, and statements Uses context-aware
     * parsing to resolve variable references
@@ -124,7 +124,7 @@ object PseudoCodeParser {
       varsResult <- variables
       _ <- StringIn("Début", "Debut", "debut", "Begin", "begin")
       symbolTable = buildSymbolTable(varsResult)
-      statements <- statementWithContext(symbolTable).rep
+      statements <- statementWithContext(symbols = symbolTable).rep
       _ <- StringIn("Fin", "fin", "End", "end")
     } yield Program(algoResult, varsResult, statements)
 

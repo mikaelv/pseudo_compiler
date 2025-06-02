@@ -13,8 +13,9 @@ sealed trait Statement {
 
 case class ForLoop(
     variable: String,
-    start: Int,
-    end: Int,
+    // TODO Int expressions
+    start: IntLiteral,
+    end: IntLiteral,
     statements: Seq[Statement]
 ) extends Statement {
   override def typeCheck(symbolTable: SymbolTable): Either[String, SymbolTable] = {

@@ -10,7 +10,7 @@ import JavaWhitespace.*
 object IntExpressionParser {
 
   def digits[$: P]: P[Unit] = P(CharsWhileIn("0-9"))
-  def integer[$: P]: P[Int] = digits.!.map(_.toInt)
+  def integer[$: P]: P[IntLiteral] = digits.!.map(s => IntLiteral(s.toInt))
 
   def addSub[$: P]: P[IntExpression] = P(multDiv ~ (CharIn("+\\-").! ~ multDiv).rep).map(IntAddSub.create)
 
@@ -21,5 +21,5 @@ object IntExpressionParser {
   def parens[$: P]: P[IntExpression] = P("(" ~ addSub ~ ")")
 
   def intExpression[$: P]: P[IntExpression] =
-    (integer.map(IntLiteral.apply) | identifier.map(IntRef.apply)).log
+    (integer | identifier.map(IntRef.apply)).log
 }

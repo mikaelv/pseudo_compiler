@@ -77,7 +77,7 @@ object PseudoInterpreter {
   ): EvalResult = {
     stmt match {
       case f: ForLoop =>
-        val result = (f.start to f.end).foldLeft(EvalResult(console, vars)) { (current, i) =>
+        val result = (f.start.value to f.end.value).foldLeft(EvalResult(console, vars)) { (current, i) =>
           val loopVars = current.vars.store(f.variable, i)
           f.statements.foldLeft(EvalResult(current.console, loopVars)) { (res, s) =>
             evalWithVars(s, res.vars, res.console)
