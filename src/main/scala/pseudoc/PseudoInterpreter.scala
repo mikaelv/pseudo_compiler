@@ -68,6 +68,15 @@ object PseudoInterpreter {
     evalWithVars(stmt, vars, console).console
   }
 
+  // TODO call from PseudoInterpreterTest
+  def evalProgram(program: Program, console: ConsoleOutput = DefaultConsoleOutput()): EvalResult = {
+    val vars = VarMap.empty // TODO initialize from declarations
+
+    program.statements.foldLeft(EvalResult(console, vars)) { case (res, stmt) =>
+      evalWithVars(stmt, res.vars, res.console)
+    }
+  }
+
   // New evaluation method that returns both console output and updated variables
   def evalWithVars(
       stmt: Statement,
