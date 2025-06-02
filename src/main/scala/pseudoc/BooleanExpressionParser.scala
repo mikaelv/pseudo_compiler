@@ -31,7 +31,7 @@ object BooleanExpressionParser {
 
   // TODO should include "or" ? circular definition, look at Python grammar
   def booleanExpression[$: P]: P[BoolExpression] =
-    (booleanLiteral | identifier.map(BoolRef.apply) | comparisonExpr).log
+    (comparisonExpr | booleanLiteral | identifier.map(BoolRef.apply) ).log
 
   def booleanOperator[$: P]: P[ComparisonOperator] = P(
     StringIn("=", "==").map(_ => ComparisonOperator.Equal) |

@@ -13,6 +13,7 @@ object Lexical {
   val keywords: Set[String] = Set(
     "Si", "si", "If", "if",
     "Alors", "alors", "Then", "then",
-    "Sinon", "sinon", "Else", "else"
+    "Sinon", "sinon", "Else", "else",
+    "Fin", "fin", "End", "end"
   )
 }

@@ -84,9 +84,9 @@ object PseudoCodeParser {
   ).map(concat => FunctionCallString("print", Seq(concat)))
 
   def ifStatement[$: P]: P[IfStatement] = P(
-    StringIn("Si", "If") ~/ booleanExpression ~
-      StringIn("Alors", "Then") ~/ statement.rep ~
-      (StringIn("Sinon", "Else") ~/ statement.rep).? ~
+    StringIn("Si", "If") ~ booleanExpression ~
+      StringIn("Alors", "Then") ~ statement.rep ~
+      (StringIn("Sinon", "Else").log("else") ~ statement.rep).? ~
       StringIn("Fin Si", "End If")
   ).map {
     case (condition, thenBranch, Some(elseBranch)) =>
@@ -113,7 +113,7 @@ object PseudoCodeParser {
     (forLoop | ifStatement | print | assignmentWithContext(symbolTable))
 
   @deprecated("only for testing")
-  def statement[$: P]: P[Statement] = statementWithContext(SymbolTable())
+  def statement[$: P]: P[Statement] = statementWithContext(SymbolTable()).log
 
   /** Parse a complete program consisting of algorithm, variables, and statements Uses context-aware
     * parsing to resolve variable references
