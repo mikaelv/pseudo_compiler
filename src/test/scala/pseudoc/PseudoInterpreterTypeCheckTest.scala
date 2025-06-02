@@ -56,7 +56,7 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       import fastparse._
       
       // Simulate a parsing error with an incomplete expression
-      val invalidInput = "x <- 10 +"
+      val invalidInput = "x <- "
       
       // Try to parse just this expression
       val parseResult = parse(invalidInput, assignment(_))
