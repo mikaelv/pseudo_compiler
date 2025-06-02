@@ -82,7 +82,7 @@ case class Assignment(variable: String, value: Expression) extends Statement {
   }
 }
 
-case class FunctionCallString(fnName: String, args: Seq[StringExpression])
+case class FunctionCall(fnName: String, args: Seq[Expression])
     extends Statement {
   override def typeCheck(symbolTable: SymbolTable): Either[String, SymbolTable] = {
     // Type check all arguments

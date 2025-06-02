@@ -23,7 +23,7 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       val statements = Seq(
         Assignment("x", IntLiteral(42)),
         Assignment("message", StringLiteral("Hello")),
-        FunctionCallString("print", Seq(StringRef("message")))
+        FunctionCall("print", Seq(StringRef("message")))
       )
       
       val program = Program(algo, vars, statements)
@@ -63,7 +63,7 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
       
       // Should be a parse failure
       parseResult match {
-        case _: Parsed.Success[_] => fail("Expected parsing to fail but it succeeded")
+        case s: Parsed.Success[_] => fail("Expected parsing to fail but it succeeded with " + s)
         case _: Parsed.Failure => succeed // Expected outcome
       }
     }
@@ -165,7 +165,7 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
             ComparisonOperator.GreaterThan,
             IntLiteral(5)
           ),
-          Seq(FunctionCallString("print", Seq(StringLiteral("This won't work"))))
+          Seq(FunctionCall("print", Seq(StringLiteral("This won't work"))))
         )
       )
       
@@ -191,7 +191,7 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
         Assignment("b", StringLiteral("Hello")),
         Assignment("c", BoolLiteral(true)),
         // Print only string value (no concatenation with int)
-        FunctionCallString("print", Seq(StringRef("b")))
+        FunctionCall("print", Seq(StringRef("b")))
       )
       
       val program = Program(algo, vars, statements)

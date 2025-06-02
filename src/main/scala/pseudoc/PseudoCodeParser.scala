@@ -45,17 +45,6 @@ object PseudoCodeParser {
       statement.rep ~ StringIn("Fin Pour", "fin pour", "End For", "end for")
   ).map(ForLoop.apply)
 
-  def print[$: P](implicit symbols: SymbolTable): P[FunctionCallString] = P(
-    StringIn(
-      "Ecrire",
-      "ecrire",
-      "écrire",
-      "Write",
-      "write",
-      "Print",
-      "print"
-    ) ~ "(" ~ stringExpression ~ ")"
-  ).map(concat => FunctionCallString("print", Seq(concat)))
 
   def ifStatement[$: P](implicit symbols: SymbolTable): P[IfStatement] = P(
     StringIn("Si", "If") ~~ ws ~ boolFactor ~
@@ -80,7 +69,7 @@ object PseudoCodeParser {
 
   // Context-aware statement parser
   def statement[$: P](implicit symbols: SymbolTable): P[Statement] =
-    (forLoop | ifStatement | print | assignment)
+    (forLoop | ifStatement | StringExpressionParser.print | assignment)
 
   /** Parse a complete program consisting of algorithm, variables, and statements Uses context-aware
     * parsing to resolve variable references

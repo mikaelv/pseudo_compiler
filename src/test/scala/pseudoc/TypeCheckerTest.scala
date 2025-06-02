@@ -36,7 +36,7 @@ class TypeCheckerTest extends AnyWordSpec with Matchers {
         )),
         
         // Correct print statements
-        FunctionCallString("print", Seq(StringLiteral("Hello")))
+        FunctionCall("print", Seq(StringLiteral("Hello")))
       )
       
       val program = Program(algo, vars, statements)

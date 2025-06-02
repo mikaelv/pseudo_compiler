@@ -1,7 +1,6 @@
 package pseudoc
 
-import pseudoc.ast.*
-import pseudoc.ast.{ConsoleOutput, DefaultConsoleOutput}
+import pseudoc.ast.{BoolExpression, ConsoleOutput, DefaultConsoleOutput, *}
 import pseudoc.PseudoType
 
 // Result of evaluation containing both console output and updated variables
@@ -85,11 +84,12 @@ object PseudoInterpreter {
         }
         result
 
-      case f @ FunctionCallString("print", args) =>
-        val arg0: StringExpression = args.head
-        EvalResult(console.print(evalStringExpr(arg0, vars)), vars)
+      case f @ FunctionCall("print", args) =>
+        val str = args.foldLeft("") { case (res, expr) =>
+          res + evalExpr(expr, vars)
+        }
+        EvalResult(console.print(str), vars)
 
-      case f: FunctionCallString => ???
 
       case ifStmt: IfStatement =>
         if (evalBoolExpr(ifStmt.condition, vars))
@@ -105,6 +105,14 @@ object PseudoInterpreter {
 
       case assign: Assignment => EvalResult(console, evalAssign(assign, vars))
 
+    }
+  }
+
+  def evalExpr(expr: Expression, vars: VarMap): Any = {
+    expr match {
+      case b:BoolExpression => evalBoolExpr(b, vars)
+      case i:IntExpression => evalIntExpr(i, vars)
+      case s:StringExpression => evalStringExpr(s, vars)
     }
   }
 

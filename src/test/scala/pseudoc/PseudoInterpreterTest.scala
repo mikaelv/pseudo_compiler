@@ -18,7 +18,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     // TODO cannot concat String and Int => fix Ecrire to take multiple args
     val code =
       """Pour i <- 1 à 10 Faire
-        |  Ecrire("Valeur de i: " + i + "\NL")
+        |  Ecrire("Valeur de i: ", i, "\NL")
         |Fin Pour""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
     val console = eval(stmt, VarMap.empty, TestConsoleOutput())
@@ -130,7 +130,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
       Assignment("x", IntLiteral(5)),
       IfStatement(
         Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
-        Seq(FunctionCallString("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
+        Seq(FunctionCall("print", Seq(StringConcat(Seq(StringLiteral("x is 5")))))),
         None
       )
     )

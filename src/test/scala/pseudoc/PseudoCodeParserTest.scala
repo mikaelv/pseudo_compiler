@@ -85,8 +85,8 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     implicit val symbols: SymbolTable = SymbolTable(Map("a" -> StringType, "b" -> StringType))
     check(
       "Write(a + \"hello\" + b + \"world\")",
-      print(_),
-      FunctionCallString(
+      StringExpressionParser.print(_),
+      FunctionCall(
         "print",
         Seq(
           StringConcat(
@@ -143,6 +143,25 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       )
     )
 
+  test("print a string, int, bool"):
+    implicit val symbols: SymbolTable =
+      SymbolTable(Map("s" -> StringType, "i" -> IntType, "b" -> BoolType))
+    check(
+      """print("s: ", s, " i: ", i, " b: ", b)""",
+      statement(_),
+      FunctionCall(
+        "print",
+        List(
+          StringLiteral("s: "),
+          StringRef("s"),
+          StringLiteral(" i: "),
+          IntRef("i"),
+          StringLiteral(" b: "),
+          BoolRef("b")
+        )
+      )
+    )
+
   test("if statement - no else"):
     implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     check(
@@ -151,7 +170,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       IfStatement(
         Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
         Seq(
-          FunctionCallString(
+          FunctionCall(
             "print",
             Seq(StringConcat(Seq(StringLiteral("x is 5"))))
           )
@@ -168,14 +187,14 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       IfStatement(
         Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
         Seq(
-          FunctionCallString(
+          FunctionCall(
             "print",
             Seq(StringConcat(Seq(StringLiteral("x is 5"))))
           )
         ),
         Some(
           Seq(
-            FunctionCallString(
+            FunctionCall(
               "print",
               Seq(StringConcat(Seq(StringLiteral("x is not 5"))))
             )
@@ -192,14 +211,14 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       IfStatement(
         Comparison(IntRef("x"), ComparisonOperator.Equal, IntLiteral(5)),
         Seq(
-          FunctionCallString(
+          FunctionCall(
             "print",
             Seq(StringConcat(Seq(StringLiteral("x is 5"))))
           )
         ),
         Some(
           Seq(
-            FunctionCallString(
+            FunctionCall(
               "print",
               Seq(StringConcat(Seq(StringLiteral("x is not 5"))))
             )

@@ -16,6 +16,16 @@ case class StringConcat(values: Seq[StringExpression]) extends StringExpression 
   }
 }
 
+object StringConcat {
+  def apply(values: Seq[StringExpression]): StringExpression = {
+    require(values.nonEmpty)
+    if (values.length == 1)
+      values.head
+    else
+      new StringConcat(values)
+  }
+}
+
 case class StringLiteral(value: String) extends StringExpression {
   // String literals are always type-correct
   override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = Right(())
