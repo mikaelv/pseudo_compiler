@@ -20,8 +20,8 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     val result = parse(str, myParser(_))
     result.get.value should ===(expectedValue)
 
-  def assignmentNoSymbols[$: P]: P[Assignment] = PseudoCodeParser.assignment(symbols = SymbolTable())
-
+  def assignmentNoSymbols[$: P]: P[Assignment] =
+    PseudoCodeParser.assignment(symbols = SymbolTable())
 
   test("identifier"):
     check("test123 \nblah :\n", identifier(_), "test123")
@@ -65,7 +65,11 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
         "  i <- 1\n" +
         "Fin",
       program(_),
-      Program(Algorithm("test"), Variables(Seq(VariableDecl("i", IntType))), Seq(Assignment("i", IntLiteral(1))))
+      Program(
+        Algorithm("test"),
+        Variables(Seq(VariableDecl("i", IntType))),
+        Seq(Assignment("i", IntLiteral(1)))
+      )
     )
   }
 
@@ -233,8 +237,6 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       )
     )
 
-
-
   test("boolean expression"):
     implicit val symbols: SymbolTable = SymbolTable(Map("x" -> BoolType))
     check(
@@ -272,3 +274,27 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
         )
       )
     )
+
+  test("boolean assignment") {
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> BoolType))
+    check(
+      "x <- false or true and (x or false)",
+      PseudoCodeParser.assignment(_),
+      Assignment(
+        "x",
+        BoolOperations(
+          BoolLiteral(false),
+          (
+            BooleanOperator.Or,
+            BoolOperations(
+              BoolLiteral(true),
+              (
+                BooleanOperator.And,
+                BoolOperations(BoolRef("x"), (BooleanOperator.Or, BoolLiteral(false)))
+              )
+            )
+          )
+        )
+      )
+    )
+  }

@@ -2,7 +2,7 @@ package pseudoc
 
 import fastparse.*
 import NoWhitespace.*
-import pseudoc.ast.BoolLiteral
+import pseudoc.ast.{BoolLiteral, StringLiteral}
 
 object Lexical {
 
@@ -27,6 +27,17 @@ object Lexical {
 
   def booleanLiteral[$: P]: P[BoolLiteral] = P(boolTrue | boolFalse)
 
+  def stringChars(c: Char): Boolean = c != '\"'
+
+  def strChars[$: P]: P[Unit] = P(CharsWhile(stringChars))
+
+  // TODO there might be a way to handle escape chars more gracefully
+  def stringLiteral[$: P]: P[StringLiteral] = P(
+    "\"" ~/ (strChars).rep.! ~ "\""
+  ).map(_.replaceAll("\\\\NL", "\n")).map(StringLiteral.apply)
+
+
+
   def stringType[$: P]: P[PseudoType.StringType.type] = StringIn(
     "chaine de caracteres",
     "chaine de caractères",
@@ -49,7 +60,7 @@ object Lexical {
       tolerantCases("alors", "then") ++
       tolerantCases("fin", "end") ++
       tolerantCases("ou", "or") ++
-      tolerantCases("and", "et") ++
+      tolerantCases("et", "and") ++
       tolerantCases("vrai", "true") ++
       tolerantCases("faux", "false")
   ).toSet

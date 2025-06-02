@@ -230,8 +230,8 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
         val vars =
           VarMap("s0" -> "hello", "s1" -> "", "i0" -> 12, "i1" -> 0, "b0" -> true, "b1" -> false)
         val result = evalWithVars(stmt, vars)
-        result.vars("s1") should be("hello")
-        result.vars("i1") should be(3)
+        result.vars("s1") should be("hello world")
+        result.vars("i1") should be(15)
         result.vars("b1") shouldBe true
 
       case f @ Parsed.Failure(stack, idx, extra) =>
@@ -248,7 +248,6 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   }
 
   test("boolean operations") {
-    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> BoolType))
     val code =
       """Algorithme: test
         |Variables:
