@@ -10,7 +10,7 @@ import pseudoc.PseudoCodeParser.variableReference
 object IntExpressionParser {
 
   def digits[$: P]: P[Unit] = P(CharsWhileIn("0-9"))
-  def integer[$: P]: P[IntLiteral] = digits.!.map(s => IntLiteral(s.toInt))
+  def intLiteral[$: P]: P[IntLiteral] = digits.!.map(s => IntLiteral(s.toInt))
 
   def intExpr[$: P](implicit symbols: SymbolTable): P[IntExpression] =
     P(multDiv ~ (CharIn("+\\-").! ~ multDiv).rep).map(IntAddSub.create)
@@ -27,6 +27,6 @@ object IntExpressionParser {
   }
 
   def intFactor[$: P](implicit symbols: SymbolTable): P[IntExpression] =
-    (integer | intRef)
+    (intLiteral | intRef)
 
 }

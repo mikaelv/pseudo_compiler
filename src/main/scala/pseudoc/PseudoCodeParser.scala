@@ -3,7 +3,7 @@ package pseudoc
 import fastparse.*
 import fastparse.JavaWhitespace.*
 import pseudoc.BooleanExpressionParser.{boolExpr, boolFactor, comparisonExpr}
-import pseudoc.IntExpressionParser.{intExpr, integer}
+import pseudoc.IntExpressionParser.{intExpr, intLiteral}
 import pseudoc.Lexical.{identifier, tpe, ws}
 import pseudoc.StringExpressionParser.stringExpression
 import pseudoc.ast.*
@@ -41,7 +41,7 @@ object PseudoCodeParser {
 
   def forLoop[$: P](implicit symbols: SymbolTable): P[ForLoop] = P(
     StringIn("Pour", "For") ~ identifier ~ "<-" ~
-      integer ~ StringIn("à", "a", "to") ~ integer ~ StringIn("Faire", "do") ~
+      intLiteral ~ StringIn("à", "a", "to") ~ intLiteral ~ StringIn("Faire", "do") ~
       statement.rep ~ StringIn("Fin Pour", "fin pour", "End For", "end for")
   ).map(ForLoop.apply)
 
