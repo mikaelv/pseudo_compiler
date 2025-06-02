@@ -6,6 +6,14 @@ case class VarMap(v: Map[String, (Class[_], Any)]) {
     v.apply(variable)._2
   }
 
+  private def friendlyTypeName(clazz: Class[_]): String = clazz match {
+    case c if c == classOf[Int] || c == classOf[java.lang.Integer] => "Integer"
+    case c if c == classOf[String] => "String"
+    case c if c == classOf[Boolean] || c == classOf[java.lang.Boolean] => "Boolean"
+    case c if c == classOf[Array[Int]] => "Array[Int]"
+    case _ => clazz.getSimpleName
+  }
+
   def store(variable: String, value: Any): VarMap = {
 
     val optTpe = v.get(variable).map(_._1)
@@ -20,7 +28,7 @@ case class VarMap(v: Map[String, (Class[_], Any)]) {
       
       if (!isCompatible)
         throw new RuntimeException(
-          s"Type error: Cannot assign ${value.getClass} value to variable '${variable}' of type ${tpe}"
+          s"Type error: Cannot assign ${friendlyTypeName(value.getClass)} value to variable '${variable}' of type ${friendlyTypeName(tpe)}"
         )
     }
 
