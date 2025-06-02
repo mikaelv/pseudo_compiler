@@ -5,14 +5,17 @@ import org.scalatest.funsuite.AnyFunSuiteLike
 import org.scalatest.matchers.should.Matchers
 import pseudoc.PseudoCodeParser.*
 import pseudoc.PseudoInterpreter.{eval, evalWithVars}
+import pseudoc.PseudoType.{BoolType, IntType}
 import pseudoc.ast.*
 
 class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
-  def statement[$: P]: P[Statement] = statementWithContext(symbols = SymbolTable())
+  def statementNoSymbols[$: P]: P[Statement] = PseudoCodeParser.statement(symbols = SymbolTable())
 
-  def assignment[$: P]: P[Assignment] = assignmentWithContext(symbols = SymbolTable())
+  def assignmentNoSymbols[$: P]: P[Assignment] = PseudoCodeParser.assignment(symbols = SymbolTable())
 
   test("for loop"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("i" -> IntType))
+    // TODO cannot concat String and Int => fix Ecrire to take multiple args
     val code =
       """Pour i <- 1 à 10 Faire
         |  Ecrire("Valeur de i: " + i + "\NL")
@@ -25,6 +28,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     console.getOutput shouldBe expected
 
   test("if statement - true condition"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     val code =
       """Si x = 5 Alors
         |  Ecrire("x is 5\NL")
@@ -35,6 +39,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     console.getOutput shouldBe "x is 5\n"
 
   test("if statement - false condition"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     val code =
       """Si x = 5 Alors
         |  Ecrire("x is 5\NL")
@@ -45,6 +50,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     console.getOutput shouldBe ""
 
   test("if-else statement - true condition"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     val code =
       """Si x = 5 Alors
         |  Ecrire("x is 5\NL")
@@ -57,6 +63,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     console.getOutput shouldBe "x is 5\n"
 
   test("if-else statement - false condition"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     val code =
       """Si x = 5 Alors
         |  Ecrire("x is 5\NL")
@@ -69,6 +76,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     console.getOutput shouldBe "x is not 5\n"
 
   test("nested if statements"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     val code =
       """Si x > 0 Alors
         |  Si x < 10 Alors
@@ -139,7 +147,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   test("integer assignment with parsed code") {
     // Test with just the assignment portion
     val assignmentCode = "x <- 42"
-    val Parsed.Success(assignmentStmt, _) = parse(assignmentCode, assignment(_))
+    val Parsed.Success(assignmentStmt, _) = parse(assignmentCode, assignmentNoSymbols(_))
 
     val vars = VarMap("x" -> 0)
     val console = TestConsoleOutput()
@@ -152,7 +160,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   test("string assignment with parsed code") {
     // Test with just the assignment portion
     val assignmentCode = "message <- \"Hello\""
-    val Parsed.Success(assignmentStmt, _) = parse(assignmentCode, assignment(_))
+    val Parsed.Success(assignmentStmt, _) = parse(assignmentCode, assignmentNoSymbols(_))
 
     val vars = VarMap("message" -> "")
     val console = TestConsoleOutput()
@@ -163,7 +171,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   }
 
   test("sequence of statements with assignment") {
-    implicit val symbols: SymbolTable = SymbolTable()
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     // First parse just the assignment
     val assignmentCode = "x <- 42"
     val Parsed.Success(assignStmt, _) = parse(assignmentCode, assignment(_))
@@ -190,7 +198,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     val code = "Algorithme: test\nVariables:\ns0: string, s1: string\n" +
       "Début\ns1 <- s0\nFin"
 
-    parse(code, programWithContext(_)) match {
+    parse(code, program(_)) match {
       case Parsed.Success(program, index) =>
         val stmt = program.statements.head
         val vars = VarMap("s0" -> "hello", "s1" -> "")
@@ -215,7 +223,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
         |  Fin Si
         |Fin""".stripMargin
 
-    parse(code, programWithContext(_)) match {
+    parse(code, program(_)) match {
       case Parsed.Success(program, index) =>
         // Extract the if statement
         val stmt = program.statements.head
@@ -225,12 +233,14 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
         result.vars("s1") should be("hello")
         result.vars("i1") should be(3)
         result.vars("b1") shouldBe true
+
       case f @ Parsed.Failure(stack, idx, extra) =>
-        fail(extra.trace().msg)
+        fail(extra.trace().longTerminalsMsg)
     }
   }
 
   test("arithmetic operations") {
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType, "y" -> IntType))
     val code = "x <- 2 + 3*(x+3) - y"
     val Parsed.Success(stmt, _) = parse(code, assignment(_))
     val result = evalWithVars(stmt, VarMap("x" -> 2, "y" -> 4)).vars
@@ -238,7 +248,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
   }
 
   test("boolean operations") {
-    // Create a complete program with Variables section for context-aware parsing
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> BoolType))
     val code =
       """Algorithme: test
         |Variables:
@@ -247,7 +257,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
         |  x <- false or true and (x or false)
         |Fin""".stripMargin
 
-    parse(code, programWithContext(_)) match {
+    parse(code, program(_)) match {
       case Parsed.Success(program, index) =>
         // Extract the assignment statement
         val stmt = program.statements.head

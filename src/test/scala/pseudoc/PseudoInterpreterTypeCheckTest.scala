@@ -4,12 +4,11 @@ import fastparse.P
 import org.scalatest.*
 import org.scalatest.matchers.should.*
 import org.scalatest.wordspec.*
-import pseudoc.PseudoCodeParser.assignmentWithContext
 import pseudoc.ast.*
 import pseudoc.PseudoType
 
 class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
-  def assignment[$: P]: P[Assignment] = assignmentWithContext(symbols = SymbolTable())
+  def assignment[$: P]: P[Assignment] = PseudoCodeParser.assignment(symbols = SymbolTable())
 
 
   "PseudoInterpreter with type checking" should {

@@ -42,7 +42,7 @@ object PseudoCodeParser {
   def forLoop[$: P](implicit symbols: SymbolTable): P[ForLoop] = P(
     StringIn("Pour", "For") ~ identifier ~ "<-" ~
       integer ~ StringIn("à", "a", "to") ~ integer ~ StringIn("Faire", "do") ~
-      statementWithContext.rep ~ StringIn("Fin Pour", "fin pour", "End For", "end for")
+      statement.rep ~ StringIn("Fin Pour", "fin pour", "End For", "end for")
   ).map(ForLoop.apply)
 
   def print[$: P](implicit symbols: SymbolTable): P[FunctionCallString] = P(
@@ -59,8 +59,8 @@ object PseudoCodeParser {
 
   def ifStatement[$: P](implicit symbols: SymbolTable): P[IfStatement] = P(
     StringIn("Si", "If") ~~ ws ~ boolFactor ~
-      StringIn("Alors", "Then") ~~ ws ~ statementWithContext.rep ~
-      (StringIn("Sinon", "Else") ~~ ws ~ statementWithContext.rep).? ~
+      StringIn("Alors", "Then") ~~ ws ~ statement.rep ~
+      (StringIn("Sinon", "Else") ~~ ws ~ statement.rep).? ~
       StringIn("Fin Si", "End If")
   ).map {
     case (condition, thenBranch, Some(elseBranch)) =>
@@ -70,7 +70,7 @@ object PseudoCodeParser {
   }.log
 
   // Context-aware assignment parser that resolves variable references using SymbolTable
-  def assignmentWithContext[$: P](implicit symbols: SymbolTable): P[Assignment] = P(
+  def assignment[$: P](implicit symbols: SymbolTable): P[Assignment] = P(
     identifier ~ "<-" ~ expression
   ).map { case (variable, value) => Assignment(variable, value) }
 
@@ -78,22 +78,20 @@ object PseudoCodeParser {
     intExpr | stringExpression | boolExpr
   )
 
-
   // Context-aware statement parser
-  def statementWithContext[$: P](implicit symbols: SymbolTable): P[Statement] =
-    (forLoop | ifStatement | print | assignmentWithContext)
-
+  def statement[$: P](implicit symbols: SymbolTable): P[Statement] =
+    (forLoop | ifStatement | print | assignment)
 
   /** Parse a complete program consisting of algorithm, variables, and statements Uses context-aware
     * parsing to resolve variable references
     */
-  def programWithContext[$: P]: P[Program] =
+  def program[$: P]: P[Program] =
     for {
       algoResult <- algo
       varsResult <- variables
       _ <- StringIn("Début", "Debut", "debut", "Begin", "begin")
       symbolTable = buildSymbolTable(varsResult)
-      statements <- statementWithContext(symbols = symbolTable).rep
+      statements <- statement(symbols = symbolTable).rep
       _ <- StringIn("Fin", "fin", "End", "end")
     } yield Program(algoResult, varsResult, statements)
 
@@ -102,7 +100,7 @@ object PseudoCodeParser {
   def parseProgram(input: String): Either[String, Program] = {
     import fastparse.*
 
-    parse(input, programWithContext(_)) match {
+    parse(input, program(_)) match {
       case Parsed.Success(program, _) => Right(program)
       case f: Parsed.Failure          => Left(s"${f.msg} (at index ${f.index})")
     }

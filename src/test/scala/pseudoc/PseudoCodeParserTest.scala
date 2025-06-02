@@ -20,7 +20,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     val result = parse(str, myParser(_))
     result.get.value should ===(expectedValue)
 
-  def assignment[$: P]: P[Assignment] = assignmentWithContext(symbols = SymbolTable())
+  def assignment[$: P]: P[Assignment] = PseudoCodeParser.assignment(symbols = SymbolTable())
 
 
   test("identifier"):
@@ -64,7 +64,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
         "Début\n" +
         "  i <- 1\n" +
         "Fin",
-      programWithContext(_),
+      program(_),
       Program(Algorithm("test"), Variables(Seq(VariableDecl("i", IntType))), Seq(Assignment("i", IntLiteral(1))))
     )
   }
@@ -215,7 +215,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     implicit val symbols: SymbolTable = SymbolTable()
     check(
       "message <- \"Hello, world!\"",
-      assignmentWithContext(_),
+      assignment(_),
       Assignment(
         "message",
         StringConcat(Seq(StringLiteral("Hello, world!")))
@@ -226,7 +226,7 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     implicit val symbols: SymbolTable = SymbolTable(Map("name" -> StringType))
     check(
       "greeting <- \"Hello, \" + name",
-      assignmentWithContext(_),
+      assignment(_),
       Assignment(
         "greeting",
         StringConcat(Seq(StringLiteral("Hello, "), StringRef("name")))
