@@ -9,11 +9,19 @@ object Lexical {
     (CharIn("a-zA-Z") ~ CharIn("a-zA-Z_0-9").rep).!.filter(!keywords.contains(_))
 
 
+  def tolerantCases(s: String): Seq[String] =
+    Seq(s, s.head.toUpper + s.tail, s.toUpperCase)
+
+  def tolerantCases(fr: String, en: String): Seq[String] =
+    tolerantCases(fr) ++ tolerantCases(en)
+
+
   // TODO factorize
-  val keywords: Set[String] = Set(
-    "Si", "si", "If", "if",
-    "Alors", "alors", "Then", "then",
-    "Sinon", "sinon", "Else", "else",
-    "Fin", "fin", "End", "end"
-  )
+  val keywords: Set[String] = (
+    tolerantCases("si", "if") ++
+    tolerantCases("alors", "then") ++
+      tolerantCases("fin", "end") ++
+      tolerantCases("ou", "or") ++
+      tolerantCases("and", "et")
+  ).toSet
 }
