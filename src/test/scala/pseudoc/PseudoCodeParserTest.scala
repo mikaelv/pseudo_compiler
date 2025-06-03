@@ -10,6 +10,8 @@ import pseudoc.Lexical.identifier
 import pseudoc.ast.*
 import pseudoc.PseudoType
 import pseudoc.PseudoType.{ArrayIntType, BoolType, IntType, StringType}
+import pseudoc.ast.AddSubOperator.{Add, Sub}
+import pseudoc.ast.MultDivOperator.{Div, Mult}
 
 class PseudoCodeParserTest extends AnyFunSuiteLike:
   def check[A](
@@ -26,6 +28,20 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
   test("identifier"):
     check("test123 \nblah :\n", identifier(_), "test123")
 
+  test("arithmetic expression"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType, "y" -> IntType))
+    check(
+      "-234 +  3*12 - x/2*y",
+      expression(_),
+      IntAddSub(
+        IntLiteral(-234),
+        Seq(
+          (Add, IntMultDiv(IntLiteral(3), Seq(Mult -> IntLiteral(12)))),
+          (Sub, IntMultDiv(IntRef("x"), Seq(Div -> IntLiteral(2), Mult -> IntRef("y"))))
+        )
+      )
+    )
+
   test("algorithme"):
     check(
       "Algorithme: recherche_dichotomique1",
@@ -35,8 +51,11 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check("Algorithme  :algo2", algo(_), Algorithm("algo2"))
 
   test("string variable"):
-    check("chaine1: chaîne", variableDecl(_),
-      Variables(Seq(VariableDecl("chaine1", PseudoType.StringType))))
+    check(
+      "chaine1: chaîne",
+      variableDecl(_),
+      Variables(Seq(VariableDecl("chaine1", PseudoType.StringType)))
+    )
 
   test("variables on one line"):
     check(
@@ -48,30 +67,27 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check(
       "Variables:\nchaine1, chaine2: string",
       variables(_),
-      Variables(Seq(
-        VariableDecl("chaine1", PseudoType.StringType),
-        VariableDecl("chaine2", PseudoType.StringType)
-      ))
+      Variables(
+        Seq(
+          VariableDecl("chaine1", PseudoType.StringType),
+          VariableDecl("chaine2", PseudoType.StringType)
+        )
+      )
     )
-
-
 
   test("variables on multiple lines"):
     check(
       "Variables:\nchaine1, chaine2: string \r\n i1, i2: entier",
       variables(_),
-      Variables(Seq(
-        VariableDecl("chaine1", PseudoType.StringType),
-        VariableDecl("chaine2", PseudoType.StringType),
-        VariableDecl("i1", PseudoType.IntType),
-        VariableDecl("i2", PseudoType.IntType),
-
-      ))
+      Variables(
+        Seq(
+          VariableDecl("chaine1", PseudoType.StringType),
+          VariableDecl("chaine2", PseudoType.StringType),
+          VariableDecl("i1", PseudoType.IntType),
+          VariableDecl("i2", PseudoType.IntType)
+        )
+      )
     )
-
-
-
-
 
   test("program") {
     check(
@@ -340,7 +356,10 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check(
       "arr <- {1, 2, 3, 4, 5}",
       assignment(_),
-      Assignment("arr", ArrayLiteral(Seq(IntLiteral(1), IntLiteral(2), IntLiteral(3), IntLiteral(4), IntLiteral(5))))
+      Assignment(
+        "arr",
+        ArrayLiteral(Seq(IntLiteral(1), IntLiteral(2), IntLiteral(3), IntLiteral(4), IntLiteral(5)))
+      )
     )
   }
 
@@ -381,7 +400,8 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
   }
 
   test("array access with variable index") {
-    implicit val symbols: SymbolTable = SymbolTable(Map("arr" -> ArrayIntType, "index" -> IntType, "x" -> IntType))
+    implicit val symbols: SymbolTable =
+      SymbolTable(Map("arr" -> ArrayIntType, "index" -> IntType, "x" -> IntType))
     check(
       "x <- arr[index]",
       assignment(_),
@@ -398,7 +418,15 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
         "result",
         IntAddSub(
           ArrayAccess(ArrayRef("arr"), IntLiteral(1)),
-          Seq((AddSubOperator.Add, IntMultDiv(ArrayAccess(ArrayRef("arr"), IntLiteral(3)), Seq((MultDivOperator.Mult, IntLiteral(2))))))
+          Seq(
+            (
+              AddSubOperator.Add,
+              IntMultDiv(
+                ArrayAccess(ArrayRef("arr"), IntLiteral(3)),
+                Seq((MultDivOperator.Mult, IntLiteral(2)))
+              )
+            )
+          )
         )
       )
     )
@@ -410,19 +438,19 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       arrayVariableDecl(_),
       Variables(Seq(ArrayVariableDecl("arr", ArrayIntType, 10)))
     )
-    
+
     check(
       "myArray[5]: array of integers",
       arrayVariableDecl(_),
       Variables(Seq(ArrayVariableDecl("myArray", ArrayIntType, 5)))
     )
-    
+
     check(
       "myArray  [5]  :  array of integer",
       arrayVariableDecl(_),
       Variables(Seq(ArrayVariableDecl("myArray", ArrayIntType, 5)))
     )
-    
+
     check(
       "myArray[5]   :array of integers",
       arrayVariableDecl(_),

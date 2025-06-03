@@ -6,8 +6,10 @@ import pseudoc.ast.{BoolLiteral, StringLiteral}
 
 object Lexical {
 
-  def identifier[$: P]: P[String] =
-    (CharIn("a-zA-Z") ~ CharIn("a-zA-Z_0-9").rep).!.filter(!keywords.contains(_))
+  def identifier[$: P]: P[String] = P(
+    (CharIn("a-zA-Z") ~ CharIn("a-zA-Z_0-9").rep).!.filter(!keywords.contains(_)))
+
+  def digits[$: P]: P[Unit] = P(CharsWhileIn("0-9"))
 
   def space[$: P]: P[Unit] = P(CharIn(" \t"))
   def spaceLF[$: P]: P[Unit] = P(CharIn(" \r\n\t"))
@@ -39,7 +41,7 @@ object Lexical {
     "\"" ~/ (strChars).rep.! ~ "\""
   ).map(_.replaceAll("\\\\NL", "\n")).map(StringLiteral.apply)
 
-  def stringType[$: P]: P[PseudoType.StringType.type] = StringIn(
+  def stringType[$: P]: P[PseudoType.StringType.type] = P(StringIn(
     "chaine de caracteres",
     "chaine de caractères",
     "chaîne de caractères",
@@ -47,15 +49,15 @@ object Lexical {
     "chaine",
     "string",
     "str"
-  ).map(_ => PseudoType.StringType)
+  ).map(_ => PseudoType.StringType))
 
-  def intType[$: P]: P[PseudoType.IntType.type] =
-    StringIn("int", "integer", "entier").map(_ => PseudoType.IntType)
+  def intType[$: P]: P[PseudoType.IntType.type] = P(
+    StringIn("int", "integer", "entier").map(_ => PseudoType.IntType))
 
-  def boolType[$: P]: P[PseudoType.BoolType.type] =
-    StringIn("bool", "boolean", "booléen").map(_ => PseudoType.BoolType)
+  def boolType[$: P]: P[PseudoType.BoolType.type] = P(
+    StringIn("bool", "boolean", "booléen").map(_ => PseudoType.BoolType))
 
-  def arrayIntType[$: P]: P[PseudoType.ArrayIntType.type] =
+  def arrayIntType[$: P]: P[PseudoType.ArrayIntType.type] = P(
     StringIn(
       "tableau[entier]", 
       "array[int]", 
@@ -64,7 +66,7 @@ object Lexical {
       "tableau d'entiers", 
       "array of integer",
       "array of integers"
-    ).map(_ => PseudoType.ArrayIntType)
+    ).map(_ => PseudoType.ArrayIntType))
 
   def tpe[$: P]: P[PseudoType] = P(arrayIntType | stringType | intType | boolType)
 

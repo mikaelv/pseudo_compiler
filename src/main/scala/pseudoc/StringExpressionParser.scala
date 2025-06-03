@@ -10,10 +10,11 @@ object StringExpressionParser {
     variableReference.collect { case s@StringRef(_) => s }
 
 
-  def stringExpression[$: P](implicit symbols: SymbolTable): P[StringExpression] =
+  def stringExpression[$: P](implicit symbols: SymbolTable): P[StringExpression] = P(
     (stringRef | stringLiteral)
       .rep(min=1, sep = "+")
-      .map(StringConcat.apply).log
+      .map(StringConcat.apply)
+  )
 
   def print[$: P](implicit symbols: SymbolTable): P[FunctionCall] = P(
     StringIn(

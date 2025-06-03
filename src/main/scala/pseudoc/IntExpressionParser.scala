@@ -1,7 +1,7 @@
 package pseudoc
 
 import fastparse.{CharIn, P}
-import pseudoc.Lexical.identifier
+import pseudoc.Lexical.{digits, identifier}
 import pseudoc.ast.{ArrayAccess, ArrayRef, IntAddSub, IntExpression, IntLiteral, IntMultDiv, IntRef}
 import fastparse.*
 import JavaWhitespace.*
@@ -10,8 +10,7 @@ import pseudoc.PseudoType
 
 object IntExpressionParser {
 
-  def digits[$: P]: P[Unit] = P(CharsWhileIn("0-9"))
-  def intLiteral[$: P]: P[IntLiteral] = digits.!.map(s => IntLiteral(s.toInt))
+  def intLiteral[$: P]: P[IntLiteral] = P((StringIn("-").? ~~ digits).!).map(s => IntLiteral(s.toInt))
 
   def intExpr[$: P](implicit symbols: SymbolTable): P[IntExpression] =
     P(multDiv ~ (CharIn("+\\-").! ~ multDiv).rep).map(IntAddSub.create)
@@ -19,7 +18,7 @@ object IntExpressionParser {
   def multDiv[$: P](implicit symbols: SymbolTable): P[IntExpression] =
     P(factor ~ (CharIn("*/").! ~ factor).rep).map(IntMultDiv.create)
 
-  def factor[$: P](implicit symbols: SymbolTable): P[IntExpression] = P(intFactor | parens)
+  def factor[$: P](implicit symbols: SymbolTable): P[IntExpression] = P(intLiteral | arrayAccess | intRef | parens)
 
   def parens[$: P](implicit symbols: SymbolTable): P[IntExpression] = P("(" ~ intExpr ~ ")")
 
@@ -30,8 +29,5 @@ object IntExpressionParser {
   def arrayAccess[$: P](implicit symbols: SymbolTable): P[ArrayAccess] = P(
     (identifier ~ "[" ~ intExpr ~ "]").filter { case (name, _) => symbols.getType(name).contains(PseudoType.ArrayIntType) }
   ).map { case (arrayName, index) => ArrayAccess(ArrayRef(arrayName), index) }
-
-  def intFactor[$: P](implicit symbols: SymbolTable): P[IntExpression] =
-    (intLiteral | arrayAccess | intRef)
 
 }

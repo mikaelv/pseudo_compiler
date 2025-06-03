@@ -22,8 +22,9 @@ object BooleanExpressionParser {
   def boolRef[$: P](implicit symbols: SymbolTable): P[BoolRef] =
     variableReference.collect { case b@BoolRef(_) => b }
 
-  def boolFactor[$: P](implicit symbols: SymbolTable): P[BoolExpression] =
-    (booleanLiteral | comparisonExpr | boolRef | parens).log
+  def boolFactor[$: P](implicit symbols: SymbolTable): P[BoolExpression] = P(
+    (booleanLiteral | comparisonExpr | boolRef | parens)
+  )
 
   def booleanOperator[$: P]: P[ComparisonOperator] = P(
     StringIn("=", "==").map(_ => ComparisonOperator.Equal) |
@@ -35,7 +36,7 @@ object BooleanExpressionParser {
   )
 
   def comparisonExpr[$: P](implicit symbols: SymbolTable): P[BoolExpression] = P(
-    IntExpressionParser.intFactor ~ booleanOperator ~ IntExpressionParser.intFactor
+    IntExpressionParser.factor ~ booleanOperator ~ IntExpressionParser.factor
   ).map { case (left, op, right) => Comparison(left, op, right) }
 
 
