@@ -10,8 +10,22 @@ import pseudoc.{PseudoType, SymbolTable}
 sealed trait Expression {
   /**
    * Check if this expression is type-correct
+   * @deprecated See claude analysis below. After prompting it might be useless:
+   * ● You're absolutely correct! The architecture shows that:
+   *
+   *   1. Parser-level validation: variableReference ensures only valid, correctly-typed variable references can be created
+   *   2. AST construction guarantees: The parsers use context-aware parsing with the symbol table, making invalid ASTs impossible to construct
+   *   3. Redundant validation: The typeCheck methods are indeed redundant because:
+   *     - Undefined variables can't make it past parsing
+   *     - Type mismatches can't occur since the parser creates the correct AST node type
+   *
+   * The typeCheck methods appear to be unnecessary! The parser already does all the validation at construction time using the symbol table, making static type checking after parsing redundant.
+   *
+   * This is actually a very clean design - validation at parse time prevents invalid ASTs from ever existing, which is much better than allowing invalid ASTs and catching them later.
+   *
    * @return Either an error message or Unit if type checking passes
    */
+  @deprecated("seems useless - we validate variable refs when building the Ast.")
   def typeCheck(symbolTable: SymbolTable): Either[String, Unit]
 }
 
@@ -25,7 +39,9 @@ sealed trait TypedExpression[T] extends Expression {
   def expressionType: Class[T]
 }
 
-sealed trait VariableRef[T <: PseudoType]
+sealed trait VariableRef[T <: PseudoType] {
+  def varName: String
+}
 
 
 sealed trait BoolExpression extends TypedExpression[Boolean] {

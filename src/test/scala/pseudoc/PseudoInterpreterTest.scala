@@ -5,7 +5,7 @@ import org.scalatest.EitherValues
 import org.scalatest.funsuite.AnyFunSuiteLike
 import org.scalatest.matchers.should.Matchers
 import pseudoc.PseudoCodeParser.*
-import pseudoc.PseudoInterpreter.{eval, evalWithVars}
+import pseudoc.PseudoInterpreter.{eval, evalStmt}
 import pseudoc.PseudoType.{ArrayIntType, BoolType, IntType}
 import pseudoc.ast.*
 
@@ -22,7 +22,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         |  Ecrire("Valeur de i: ", i, "\NL")
         |Fin Pour""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, VarMap.empty, TestConsoleOutput())
+    val console = eval(stmt, VarMap.empty, TestConsoleIO())
 
     // Assert that output contains expected text
     val expected = (1 to 10).map(i => s"Valeur de i: $i\n").mkString
@@ -35,7 +35,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         |  Ecrire("x is 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, VarMap("x" -> 5), TestConsoleOutput())
+    val console = eval(stmt, VarMap("x" -> 5), TestConsoleIO())
 
     console.getOutput shouldBe "x is 5\n"
 
@@ -46,7 +46,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         |  Ecrire("x is 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, VarMap("x" -> 10), TestConsoleOutput())
+    val console = eval(stmt, VarMap("x" -> 10), TestConsoleIO())
 
     console.getOutput shouldBe ""
 
@@ -59,7 +59,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         |  Ecrire("x is not 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, VarMap("x" -> 5), TestConsoleOutput())
+    val console = eval(stmt, VarMap("x" -> 5), TestConsoleIO())
 
     console.getOutput shouldBe "x is 5\n"
 
@@ -72,7 +72,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         |  Ecrire("x is not 5\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, VarMap("x" -> 10), TestConsoleOutput())
+    val console = eval(stmt, VarMap("x" -> 10), TestConsoleIO())
 
     console.getOutput shouldBe "x is not 5\n"
 
@@ -89,7 +89,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         |  Ecrire("x is less than or equal to 0\NL")
         |Fin Si""".stripMargin
     val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, VarMap("x" -> 5), TestConsoleOutput())
+    val console = eval(stmt, VarMap("x" -> 5), TestConsoleIO())
 
     console.getOutput shouldBe "x is between 0 and 10\n"
 
@@ -97,7 +97,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     // String variable
     val vars = VarMap("message" -> "")
     val assignment = Assignment("message", StringLiteral("Hello"))
-    val result = evalWithVars(assignment, vars, TestConsoleOutput())
+    val result = evalStmt(assignment, vars, TestConsoleIO())
 
     result.vars("message") should be("Hello")
     result.console.getOutput should be("")
@@ -105,7 +105,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     // Integer variable with integer literal
     val intVars = VarMap("counter" -> 0)
     val intAssignment = Assignment("counter", IntLiteral(42))
-    val intResult = evalWithVars(intAssignment, intVars, TestConsoleOutput())
+    val intResult = evalStmt(intAssignment, intVars, TestConsoleIO())
 
     intResult.vars("counter") should be(42)
     intResult.console.getOutput should be("")
@@ -117,7 +117,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     val assignment = Assignment("counter", IntLiteral(42))
 
     val exception = intercept[RuntimeException] {
-      evalWithVars(assignment, vars, TestConsoleOutput())
+      evalStmt(assignment, vars, TestConsoleIO())
     }
 
     exception.getMessage should include("Type error")
@@ -136,9 +136,9 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
       )
     )
 
-    val console = TestConsoleOutput()
+    val console = TestConsoleIO()
     val result = statements.foldLeft(EvalResult(console, vars)) { (res, stmt) =>
-      evalWithVars(stmt, res.vars, res.console)
+      evalStmt(stmt, res.vars, res.console)
     }
 
     result.console.getOutput should be("x is 5")
@@ -151,9 +151,9 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     val Parsed.Success(assignmentStmt, _) = parse(assignmentCode, assignmentNoSymbols(_))
 
     val vars = VarMap("x" -> 0)
-    val console = TestConsoleOutput()
+    val console = TestConsoleIO()
 
-    val result = evalWithVars(assignmentStmt, vars, console)
+    val result = evalStmt(assignmentStmt, vars, console)
 
     result.vars("x") should be(42)
   }
@@ -164,9 +164,9 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     val Parsed.Success(assignmentStmt, _) = parse(assignmentCode, assignmentNoSymbols(_))
 
     val vars = VarMap("message" -> "")
-    val console = TestConsoleOutput()
+    val console = TestConsoleIO()
 
-    val result = evalWithVars(assignmentStmt, vars, console)
+    val result = evalStmt(assignmentStmt, vars, console)
 
     result.vars("message") should be("Hello")
   }
@@ -186,10 +186,10 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
 
     // Execute them in sequence
     val vars = VarMap("x" -> 0)
-    val console = TestConsoleOutput()
+    val console = TestConsoleIO()
 
-    val result1 = evalWithVars(assignStmt, vars, console)
-    val result2 = evalWithVars(ifStmt, result1.vars, result1.console)
+    val result1 = evalStmt(assignStmt, vars, console)
+    val result2 = evalStmt(ifStmt, result1.vars, result1.console)
 
     result2.console.getOutput should be("x is 42\n")
     result2.vars("x") should be(42)
@@ -203,7 +203,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
       case Parsed.Success(program, index) =>
         val stmt = program.statements.head
         val vars = VarMap("s0" -> "hello", "s1" -> "")
-        val result = evalWithVars(stmt, vars)
+        val result = evalStmt(stmt, vars)
         result.vars("s1") should be("hello")
       case Parsed.Failure(stack, idx, extra) =>
         fail(extra.trace().msg)
@@ -232,7 +232,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         val stmt = program.statements.head
         val vars =
           VarMap("s0" -> "hello", "s1" -> "", "i0" -> 12, "i1" -> 0, "b0" -> true, "b1" -> false)
-        val result = evalWithVars(stmt, vars)
+        val result = evalStmt(stmt, vars)
         result.vars("s1") should be("hello world")
         result.vars("i1") should be(15)
         result.vars("b1") shouldBe true
@@ -246,7 +246,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType, "y" -> IntType))
     val code = "x <- 2 + 3*(x+3) - y"
     val Parsed.Success(stmt, _) = parse(code, assignment(_))
-    val result = evalWithVars(stmt, VarMap("x" -> 2, "y" -> 4)).vars
+    val result = evalStmt(stmt, VarMap("x" -> 2, "y" -> 4)).vars
     result should be(VarMap("x" -> 13, "y" -> 4))
   }
 
@@ -263,9 +263,9 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
       case Parsed.Success(program, index) =>
         // Extract the assignment statement
         val stmt = program.statements.head
-        var result = evalWithVars(stmt, VarMap("x" -> true)).vars
+        var result = evalStmt(stmt, VarMap("x" -> true)).vars
         result should be(VarMap("x" -> true))
-        result = evalWithVars(stmt, VarMap("x" -> false)).vars
+        result = evalStmt(stmt, VarMap("x" -> false)).vars
         result should be(VarMap("x" -> false))
       case Parsed.Failure(stack, idx, extra) =>
         fail(extra.trace().msg)
@@ -285,7 +285,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
       case Parsed.Success(program, index) =>
         val stmt = program.statements.head
         val vars = VarMap("arr" -> Array.empty[Int])
-        val result = evalWithVars(stmt, vars)
+        val result = evalStmt(stmt, vars)
         val resultArray = result.vars("arr").asInstanceOf[Array[Int]]
         resultArray should be(Array(1, 2, 3, 4, 5))
       case Parsed.Failure(stack, idx, extra) =>
@@ -307,8 +307,8 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     parse(code, program(_)) match {
       case Parsed.Success(program, index) =>
         val vars = VarMap("arr" -> Array.empty[Int], "x" -> 0)
-        val result = program.statements.foldLeft(EvalResult(TestConsoleOutput(), vars)) { (res, stmt) =>
-          evalWithVars(stmt, res.vars, res.console)
+        val result = program.statements.foldLeft(EvalResult(TestConsoleIO(), vars)) { (res, stmt) =>
+          evalStmt(stmt, res.vars, res.console)
         }
         result.vars("x") should be(30) // Arrays are 0-indexed, so arr[2] = 30
       case Parsed.Failure(stack, idx, extra) =>
@@ -330,8 +330,8 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     parse(code, program(_)) match {
       case Parsed.Success(program, index) =>
         val vars = VarMap("source" -> Array.empty[Int], "target" -> Array.empty[Int])
-        val result = program.statements.foldLeft(EvalResult(TestConsoleOutput(), vars)) { (res, stmt) =>
-          evalWithVars(stmt, res.vars, res.console)
+        val result = program.statements.foldLeft(EvalResult(TestConsoleIO(), vars)) { (res, stmt) =>
+          evalStmt(stmt, res.vars, res.console)
         }
         val targetArray = result.vars("target").asInstanceOf[Array[Int]]
         targetArray should be(Array(100, 200, 300))
@@ -354,8 +354,8 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     parse(code, program(_)) match {
       case Parsed.Success(program, index) =>
         val vars = VarMap("arr" -> Array.empty[Int], "result" -> 0)
-        val result = program.statements.foldLeft(EvalResult(TestConsoleOutput(), vars)) { (res, stmt) =>
-          evalWithVars(stmt, res.vars, res.console)
+        val result = program.statements.foldLeft(EvalResult(TestConsoleIO(), vars)) { (res, stmt) =>
+          evalStmt(stmt, res.vars, res.console)
         }
         result.vars("result") should be(50) // arr[1] + arr[3] * 2 = 10 + 20 * 2 = 50
       case Parsed.Failure(stack, idx, extra) =>
@@ -379,8 +379,8 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     parse(code, program(_)) match {
       case Parsed.Success(program, index) =>
         val vars = VarMap("arr" -> Array.empty[Int], "index" -> 0, "value" -> 0)
-        val result = program.statements.foldLeft(EvalResult(TestConsoleOutput(), vars)) { (res, stmt) =>
-          evalWithVars(stmt, res.vars, res.console)
+        val result = program.statements.foldLeft(EvalResult(TestConsoleIO(), vars)) { (res, stmt) =>
+          evalStmt(stmt, res.vars, res.console)
         }
         result.vars("value") should be(28) // arr[3] = 28
       case Parsed.Failure(stack, idx, extra) =>
@@ -401,7 +401,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
       case Parsed.Success(program, index) =>
         val stmt = program.statements.head
         val vars = VarMap("arr" -> Array.empty[Int])
-        val result = evalWithVars(stmt, vars)
+        val result = evalStmt(stmt, vars)
         val resultArray = result.vars("arr").asInstanceOf[Array[Int]]
         resultArray should be(Array.empty[Int])
       case Parsed.Failure(stack, idx, extra) =>
@@ -412,7 +412,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
   test("array type checking - compatible assignment") {
     val vars = VarMap("arr" -> Array.empty[Int])
     val assignment = Assignment("arr", ArrayLiteral(Seq(IntLiteral(1), IntLiteral(2), IntLiteral(3))))
-    val result = evalWithVars(assignment, vars, TestConsoleOutput())
+    val result = evalStmt(assignment, vars, TestConsoleIO())
 
     val resultArray = result.vars("arr").asInstanceOf[Array[Int]]
     resultArray should be(Array(1, 2, 3))
@@ -424,7 +424,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     val assignment = Assignment("x", ArrayLiteral(Seq(IntLiteral(1), IntLiteral(2))))
 
     val exception = intercept[RuntimeException] {
-      evalWithVars(assignment, vars, TestConsoleOutput())
+      evalStmt(assignment, vars, TestConsoleIO())
     }
 
     exception.getMessage should include("Type error")
@@ -446,8 +446,8 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     parse(code, program(_)) match {
       case Parsed.Success(program, index) =>
         val vars = VarMap("arr" -> Array.empty[Int], "x" -> 0)
-        val result = program.statements.foldLeft(EvalResult(TestConsoleOutput(), vars)) { (res, stmt) =>
-          evalWithVars(stmt, res.vars, res.console)
+        val result = program.statements.foldLeft(EvalResult(TestConsoleIO(), vars)) { (res, stmt) =>
+          evalStmt(stmt, res.vars, res.console)
         }
         result.vars("x") should be(3) // arr[2] = 3
       case Parsed.Failure(stack, idx, extra) =>
@@ -467,4 +467,14 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     val array = result.vars("arr").asInstanceOf[Array[Int]]
     array.length should be(7)
     array should be(Array(0, 0, 0, 0, 0, 0, 0)) // Should be filled with zeros
+  }
+
+  test("read variable from stdin") {
+
+    val vars = PseudoInterpreter.evalStmt(
+      FunctionCall("read", Seq(StringRef("s"))),
+      VarMap("s" -> ""),
+      TestConsoleIO(input = "hello world")
+    ).vars
+    vars("s") shouldBe("hello world")
   }

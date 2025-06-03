@@ -2,26 +2,41 @@ package pseudoc.ast
 
 import pseudoc.ast
 
+import java.io.{BufferedReader, StringReader}
+import scala.io.StdIn
+
 // Immutable console output interface
-trait ConsoleOutput {
-  def print(text: String): ConsoleOutput
+trait ConsoleIO {
+  def print(text: String): ConsoleIO
+  // TODO return a new ConsoleIO:  more functional
+  def readLine(): Option[String]
   def getOutput: String
 }
 
 // Default implementation that prints to console and captures output
-case class DefaultConsoleOutput(output: String = "") extends ConsoleOutput {
-  def print(text: String): ConsoleOutput = {
+case class DefaultConsoleIO(output: String = "") extends ConsoleIO {
+  def print(text: String): ConsoleIO = {
     scala.Predef.print(text)
-    DefaultConsoleOutput(output + text)
+    DefaultConsoleIO(output + text)
+  }
+
+  def readLine(): Option[String] = {
+    Option(StdIn.readLine())
   }
 
   def getOutput: String = output
 }
 
 // Test implementation that only captures output without printing to console
-case class TestConsoleOutput(output: String = "") extends ConsoleOutput {
-  def print(text: String): ConsoleOutput = {
-    TestConsoleOutput(output + text)
+case class TestConsoleIO(output: String = "", input: String="") extends ConsoleIO {
+  private val reader = BufferedReader(new StringReader(input))
+
+  def print(text: String): ConsoleIO = {
+    TestConsoleIO(output + text)
+  }
+
+  override def readLine(): Option[String] = {
+    Option(reader.readLine())
   }
 
   def getOutput: String = output

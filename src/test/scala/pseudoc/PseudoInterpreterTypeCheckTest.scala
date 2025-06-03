@@ -38,9 +38,9 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
         "message" -> (classOf[String], "")
       ))
       
-      val testConsole = TestConsoleOutput()
+      val testConsole = TestConsoleIO()
       val result = statements.foldLeft(EvalResult(testConsole, initialVarMap)) { 
-        (result, statement) => PseudoInterpreter.evalWithVars(statement, result.vars, result.console)
+        (result, statement) => PseudoInterpreter.evalStmt(statement, result.vars, result.console)
       }
       
       // Check console output
@@ -134,11 +134,11 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
         "message" -> (classOf[String], "")
       ))
       
-      val testConsole = TestConsoleOutput()
+      val testConsole = TestConsoleIO()
       
       // Evaluate the program
       val result = statements.foldLeft(EvalResult(testConsole, initialVarMap)) { 
-        (current, statement) => PseudoInterpreter.evalWithVars(statement, current.vars, current.console)
+        (current, statement) => PseudoInterpreter.evalStmt(statement, current.vars, current.console)
       }
       
       // Check final variable values
@@ -207,11 +207,11 @@ class PseudoInterpreterTypeCheckTest extends AnyWordSpec with Matchers {
         "c" -> (classOf[Boolean], false)
       ))
       
-      val testConsole = TestConsoleOutput()
+      val testConsole = TestConsoleIO()
       
       // Evaluate the program
       val result = statements.foldLeft(EvalResult(testConsole, initialVarMap)) { 
-        (current, statement) => PseudoInterpreter.evalWithVars(statement, current.vars, current.console)
+        (current, statement) => PseudoInterpreter.evalStmt(statement, current.vars, current.console)
       }
       
       // Check console output

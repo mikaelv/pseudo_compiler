@@ -1,79 +1,85 @@
 package pseudoc
 
-import pseudoc.ast.{BoolExpression, ConsoleOutput, DefaultConsoleOutput, *}
+import pseudoc.ast.*
 import pseudoc.PseudoType
 
 // Result of evaluation containing both console output and updated variables
-case class EvalResult(console: ConsoleOutput, vars: VarMap)
+case class EvalResult(console: ConsoleIO, vars: VarMap)
 
 object PseudoInterpreter {
-  /**
-   * Parse, type check, and evaluate a program from source code
-   * 
-   * @param source The program source code
-   * @param console Console output implementation
-   * @return Either an error message or the evaluation result
-   */
+
+  /** Parse, type check, and evaluate a program from source code
+    *
+    * @param source
+    *   The program source code
+    * @param console
+    *   Console output implementation
+    * @return
+    *   Either an error message or the evaluation result
+    */
   def run(
       source: String,
-      console: ConsoleOutput = DefaultConsoleOutput()
+      console: ConsoleIO = DefaultConsoleIO()
   ): Either[String, EvalResult] = {
     // Parse the program
     PseudoCodeParser.parseProgram(source) match {
-      case Left(parseError) => 
+      case Left(parseError) =>
         Left(s"Parse error: $parseError")
-        
+
       case Right(program) =>
         // Type check the program
         program.typeCheck() match {
-          case Left(typeError) => 
+          case Left(typeError) =>
             Left(s"Type error: $typeError")
-            
+
           case Right(_) =>
             // Initialize empty variable map
             val initialVarMap = createVarMapFromDeclarations(program.variables)
-            
+
             // Evaluate each statement
-            val result = program.statements.foldLeft(EvalResult(console, initialVarMap)) { 
-              (result, statement) => evalWithVars(statement, result.vars, result.console)
+            val result = program.statements.foldLeft(EvalResult(console, initialVarMap)) {
+              (result, statement) => evalStmt(statement, result.vars, result.console)
             }
-            
+
             Right(result)
         }
     }
   }
-  
-  /**
-   * Create a VarMap from variable declarations
-   */
+
+  /** Create a VarMap from variable declarations
+    */
   private def createVarMapFromDeclarations(variables: Variables): VarMap = {
     val initialValues = variables.vars.map {
       case VariableDecl(name, tpe) =>
         val initialValue = tpe match {
           case PseudoType.StringType => ""
-          case PseudoType.IntType => 0
-          case PseudoType.BoolType => false
-          case PseudoType.ArrayIntType => throw new RuntimeException(s"Regular VariableDecl should not have ArrayIntType. Use ArrayVariableDecl instead.")
+          case PseudoType.IntType    => 0
+          case PseudoType.BoolType   => false
+          case PseudoType.ArrayIntType =>
+            throw new RuntimeException(
+              s"Regular VariableDecl should not have ArrayIntType. Use ArrayVariableDecl instead."
+            )
         }
         (name, initialValue)
-        
+
       case ArrayVariableDecl(name, tpe, size) =>
         val initialValue = tpe match {
-          case PseudoType.ArrayIntType => Array.fill(size)(0) // Create array with specified size, filled with zeros
+          case PseudoType.ArrayIntType =>
+            Array.fill(size)(0) // Create array with specified size, filled with zeros
           case _ => throw new RuntimeException(s"ArrayVariableDecl used with non-array type: $tpe")
         }
         (name, initialValue)
     }
-    
+
     VarMap(initialValues: _*)
   }
   // For backward compatibility
   def eval(
       stmt: Statement,
       vars: VarMap,
-      console: ConsoleOutput = DefaultConsoleOutput()
-  ): ConsoleOutput = {
-    evalWithVars(stmt, vars, console).console
+      console: ConsoleIO = DefaultConsoleIO()
+  ): ConsoleIO = {
+    evalStmt(stmt, vars, console).console
   }
 
   // TODO call from PseudoInterpreterTest
@@ -86,18 +92,19 @@ object PseudoInterpreter {
   }*/
 
   // New evaluation method that returns both console output and updated variables
-  def evalWithVars(
+  def evalStmt(
       stmt: Statement,
       vars: VarMap,
-      console: ConsoleOutput = DefaultConsoleOutput()
+      console: ConsoleIO = DefaultConsoleIO()
   ): EvalResult = {
     stmt match {
       case f: ForLoop =>
-        val result = (f.start.value to f.end.value).foldLeft(EvalResult(console, vars)) { (current, i) =>
-          val loopVars = current.vars.store(f.variable, i)
-          f.statements.foldLeft(EvalResult(current.console, loopVars)) { (res, s) =>
-            evalWithVars(s, res.vars, res.console)
-          }
+        val result = (f.start.value to f.end.value).foldLeft(EvalResult(console, vars)) {
+          (current, i) =>
+            val loopVars = current.vars.store(f.variable, i)
+            f.statements.foldLeft(EvalResult(current.console, loopVars)) { (res, s) =>
+              evalStmt(s, res.vars, res.console)
+            }
         }
         result
 
@@ -107,16 +114,25 @@ object PseudoInterpreter {
         }
         EvalResult(console.print(str), vars)
 
+      case f @ FunctionCall("read", Seq(ref: VariableRef[_])) =>
+        val line = console.readLine().getOrElse(throw new RuntimeException("console EOF"))
+        val value = ref match {
+          case _: StringRef => line
+          case _: IntRef    => line.trim.toInt
+          case _: BoolRef   => line.trim.toBoolean
+        }
+        EvalResult(console, vars.store(ref.varName, value))
 
+      case f: FunctionCall => throw new UnsupportedOperationException(s"Unsupported: $f")
 
       case ifStmt: IfStatement =>
         if (evalBoolExpr(ifStmt.condition, vars))
           ifStmt.thenBranch.foldLeft(EvalResult(console, vars)) { (res, s) =>
-            evalWithVars(s, res.vars, res.console)
+            evalStmt(s, res.vars, res.console)
           }
         else if (ifStmt.elseBranch.isDefined)
           ifStmt.elseBranch.get.foldLeft(EvalResult(console, vars)) { (res, s) =>
-            evalWithVars(s, res.vars, res.console)
+            evalStmt(s, res.vars, res.console)
           }
         else
           EvalResult(console, vars)
@@ -128,10 +144,10 @@ object PseudoInterpreter {
 
   def evalExpr(expr: Expression, vars: VarMap): Any = {
     expr match {
-      case a:ArrayExpression => evalArrayExpr(a, vars)
-      case b:BoolExpression => evalBoolExpr(b, vars)
-      case i:IntExpression => evalIntExpr(i, vars)
-      case s:StringExpression => evalStringExpr(s, vars)
+      case a: ArrayExpression  => evalArrayExpr(a, vars)
+      case b: BoolExpression   => evalBoolExpr(b, vars)
+      case i: IntExpression    => evalIntExpr(i, vars)
+      case s: StringExpression => evalStringExpr(s, vars)
     }
   }
 
@@ -191,11 +207,14 @@ object PseudoInterpreter {
 
   def evalArrayExpr(expr: ArrayExpression, vars: VarMap): Array[Int] =
     expr match
-      case ArrayRef(varName) => 
+      case ArrayRef(varName) =>
         val value = vars(varName)
         value match {
           case arr: Array[Int] => arr
-          case _ => throw new RuntimeException(s"Variable '$varName' is not an array, found ${value.getClass}")
+          case _ =>
+            throw new RuntimeException(
+              s"Variable '$varName' is not an array, found ${value.getClass}"
+            )
         }
       case ArrayLiteral(values) => values.map(evalIntExpr(_, vars)).toArray
 
