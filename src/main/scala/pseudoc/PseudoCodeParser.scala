@@ -83,7 +83,7 @@ object PseudoCodeParser {
 
   // Context-aware statement parser
   def statement[$: P](implicit symbols: SymbolTable): P[Statement] = P(
-    (forLoop | ifStatement | StringExpressionParser.print | assignment))
+    (forLoop | ifStatement | StringExpressionParser.print | StringExpressionParser.read | assignment))
 
   /** Parse a complete program consisting of algorithm, variables, and statements Uses context-aware
     * parsing to resolve variable references

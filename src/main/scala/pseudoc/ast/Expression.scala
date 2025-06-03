@@ -1,6 +1,6 @@
 package pseudoc.ast
 
-import pseudoc.SymbolTable
+import pseudoc.{PseudoType, SymbolTable}
 
 // Yes I know this file is huge. If I split it, no sealed traits ! :-(
 
@@ -25,7 +25,7 @@ sealed trait TypedExpression[T] extends Expression {
   def expressionType: Class[T]
 }
 
-sealed trait VariableRef[T] extends TypedExpression[T]
+sealed trait VariableRef[T <: PseudoType]
 
 
 sealed trait BoolExpression extends TypedExpression[Boolean] {
@@ -50,7 +50,7 @@ case class Comparison(
 enum ComparisonOperator:
   case Equal, NotEqual, LessThan, GreaterThan, LessThanEqual, GreaterThanEqual
 
-case class BoolRef(varName: String) extends BoolExpression {
+case class BoolRef(varName: String) extends BoolExpression with VariableRef[PseudoType.BoolType.type] {
   override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = {
     symbolTable.checkBoolVariable(varName)
   }
@@ -92,11 +92,11 @@ object BoolOperations {
 
 
 
-sealed trait IntExpression extends VariableRef[Int] {
+sealed trait IntExpression extends TypedExpression[Int] {
   override def expressionType: Class[Int] = classOf[Int]
 }
 
-case class IntRef(varName: String) extends IntExpression {
+case class IntRef(varName: String) extends IntExpression with VariableRef[PseudoType.IntType.type] {
   override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = {
     symbolTable.checkIntVariable(varName)
   }
@@ -216,7 +216,7 @@ case class StringLiteral(value: String) extends StringExpression {
   override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = Right(())
 }
 
-case class StringRef(varName: String) extends StringExpression {
+case class StringRef(varName: String) extends StringExpression with VariableRef[PseudoType.StringType.type] {
   override def typeCheck(symbolTable: SymbolTable): Either[String, Unit] = {
     // Strict type checking - only allow reference to string variables
     symbolTable.checkStringVariable(varName)

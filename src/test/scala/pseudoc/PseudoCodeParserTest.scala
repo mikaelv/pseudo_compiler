@@ -437,3 +437,18 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       Variables(Seq(ArrayVariableDecl("arr", ArrayIntType, 10)))
     )
   }
+
+  test("read input") {
+    implicit val symbols: SymbolTable = SymbolTable(Map("s" -> StringType, "i" -> IntType))
+    check(
+      "Lire(s)",
+      statement(_),
+      FunctionCall("read", Seq(StringRef("s")))
+    )
+
+    check(
+      "Lire(i)",
+      statement(_),
+      FunctionCall("read", Seq(IntRef("i")))
+    )
+  }
