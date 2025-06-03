@@ -115,13 +115,13 @@ object PseudoInterpreter {
         EvalResult(console.print(str), vars)
 
       case f @ FunctionCall("read", Seq(ref: VariableRef[_])) =>
-        val line = console.readLine().getOrElse(throw new RuntimeException("console EOF"))
+        val (line, newConsole) = console.readLine()
         val value = ref match {
           case _: StringRef => line
           case _: IntRef    => line.trim.toInt
           case _: BoolRef   => line.trim.toBoolean
         }
-        EvalResult(console, vars.store(ref.varName, value))
+        EvalResult(newConsole, vars.store(ref.varName, value))
 
       case f: FunctionCall => throw new UnsupportedOperationException(s"Unsupported: $f")
 

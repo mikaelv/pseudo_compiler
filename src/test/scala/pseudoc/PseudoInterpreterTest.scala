@@ -16,7 +16,6 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
 
   test("for loop"):
     implicit val symbols: SymbolTable = SymbolTable(Map("i" -> IntType))
-    // TODO cannot concat String and Int => fix Ecrire to take multiple args
     val code =
       """Pour i <- 1 à 10 Faire
         |  Ecrire("Valeur de i: ", i, "\NL")
@@ -469,8 +468,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     array should be(Array(0, 0, 0, 0, 0, 0, 0)) // Should be filled with zeros
   }
 
-  test("read variable from stdin") {
-
+  test("read a string variable from stdin") {
     val vars = PseudoInterpreter.evalStmt(
       FunctionCall("read", Seq(StringRef("s"))),
       VarMap("s" -> ""),
@@ -478,3 +476,33 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     ).vars
     vars("s") shouldBe("hello world")
   }
+
+  test("read an int variable from stdin") {
+    val vars = PseudoInterpreter.evalStmt(
+      FunctionCall("read", Seq(IntRef("i"))),
+      VarMap("i" -> 0),
+      TestConsoleIO(input = "12")
+    ).vars
+    vars("i") shouldBe (12)
+  }
+
+  test("read multiple variables") {
+    val code =
+      """Algorithme: test
+        |Variables:
+        |  s: chaine
+        |  i: entier
+        |  b: booléen
+        |Début
+        |  Lire(s)
+        |  Lire(i)
+        |  Lire(b)
+        |Fin""".stripMargin
+
+    val result = PseudoInterpreter.run(code, TestConsoleIO(input = "hello\n24\ntrue\n")).value
+    result.vars("s") shouldBe("hello")
+    result.vars("i") shouldBe(24)
+    result.vars("b") shouldBe(true)
+
+  }
+
