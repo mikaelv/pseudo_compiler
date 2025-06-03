@@ -3,6 +3,38 @@
 ## Running tests
 use sbt
 
+## Array Type System Implementation
+
+### Array Type Architecture
+- **ArrayExpression trait**: Extends `TypedExpression[Array[Int]]` for compile-time type safety
+- **ArrayRef and ArrayLiteral**: Case classes implementing array references and literals
+- **ArrayAccess**: Extends `IntExpression` for array element access operations
+- **ArrayVariableDecl**: Specialized declaration class for arrays with size information
+
+### Array Syntax Support
+- **Array literals**: Use curly braces `{1, 2, 3}` instead of square brackets
+- **Array access**: Use square brackets for indexing `arr[2]`
+- **Size declarations**: Support syntax `name [size] : arraytype` (e.g., `arr [10] : tableau d'entier`)
+- **Multiple type names**: Support French (`tableau d'entier`) and English (`arrayint`) variants
+
+### Parser Implementation Insights
+- **Expression precedence**: Order matters - `intExpr` must be tried before `arrayExpr` to handle array access correctly
+- **Type-aware parsing**: Use `variableReference` instead of manual filtering for proper symbol table lookup
+- **Separate parsers**: Split variable declarations into `regularVariableDecl` and `arrayVariableDecl` functions
+- **Parser architecture**: Create separate classes for different declaration types instead of modifying existing structures
+
+### Array Evaluation and Type Checking
+- **Size-aware initialization**: Use `Array.fill(size)(0)` for proper size-based array creation
+- **Type checking**: Handle `Array[Int]` compatibility in VarMap with boxing support
+- **Error handling**: Provide user-friendly type names instead of JVM internal representations
+- **Runtime validation**: Check array types at evaluation time with clear error messages
+
+### Development Guidance Patterns
+- **Unicode handling**: Be careful with Unicode characters in source files (right single quotation mark vs ASCII apostrophe)
+- **Architecture decisions**: Prefer sealed traits and case classes for AST nodes over mutable structures
+- **Test organization**: Place array tests in `PseudoCodeParserTest` rather than separate test files
+- **Error reporting**: Implement meaningful error messages that help users understand type mismatches
+
 ## Code Style Preferences
 
 ### Immutability

@@ -47,15 +47,22 @@ object PseudoInterpreter {
    * Create a VarMap from variable declarations
    */
   private def createVarMapFromDeclarations(variables: Variables): VarMap = {
-    val initialValues = variables.vars.map { varDecl =>
-      val initialValue = varDecl.tpe match {
-        case PseudoType.StringType => ""
-        case PseudoType.IntType => 0
-        case PseudoType.BoolType => false
-        case PseudoType.ArrayIntType => Array.empty[Int]
-      }
-      
-      (varDecl.name, initialValue)
+    val initialValues = variables.vars.map {
+      case VariableDecl(name, tpe) =>
+        val initialValue = tpe match {
+          case PseudoType.StringType => ""
+          case PseudoType.IntType => 0
+          case PseudoType.BoolType => false
+          case PseudoType.ArrayIntType => throw new RuntimeException(s"Regular VariableDecl should not have ArrayIntType. Use ArrayVariableDecl instead.")
+        }
+        (name, initialValue)
+        
+      case ArrayVariableDecl(name, tpe, size) =>
+        val initialValue = tpe match {
+          case PseudoType.ArrayIntType => Array.fill(size)(0) // Create array with specified size, filled with zeros
+          case _ => throw new RuntimeException(s"ArrayVariableDecl used with non-array type: $tpe")
+        }
+        (name, initialValue)
     }
     
     VarMap(initialValues: _*)

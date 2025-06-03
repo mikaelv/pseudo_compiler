@@ -28,14 +28,22 @@ case class TestConsoleOutput(output: String = "") extends ConsoleOutput {
 }
 
 case class Algorithm(name: String) extends Ast
-case class Variables(vars: Seq[VariableDecl])
+// Base trait for variable declarations
+sealed trait VariableDeclaration {
+  def name: String
+  def tpe: pseudoc.PseudoType
+}
+
+case class VariableDecl(name: String, tpe: pseudoc.PseudoType) extends VariableDeclaration
+case class ArrayVariableDecl(name: String, tpe: pseudoc.PseudoType, size: Int) extends VariableDeclaration
+
+case class Variables(vars: Seq[VariableDeclaration])
 object Variables {
   def fromSeq(seq: Seq[Variables]): Variables =
     seq.foldLeft(new Variables(Seq.empty)) { case (res, vars) =>
       new ast.Variables(res.vars ++ vars.vars)
     }
 }
-case class VariableDecl(name: String, tpe: pseudoc.PseudoType)
 
 sealed trait Ast {}
 

@@ -35,7 +35,7 @@ object PseudoCodeParser {
   /** syntax: ```arr [10] : tableau d'entier``` */
   def arrayVariableDecl[$: P]: P[Variables] =
     P(identifier ~ "[" ~ intLiteral ~ "]" ~ ":" ~ arrayIntType).map { case (varName, size, arrayType) =>
-      Variables(Seq(VariableDecl(varName, arrayType)))
+      Variables(Seq(ArrayVariableDecl(varName, arrayType, size.value)))
     }
 
   def variableDecl[$: P]: P[Variables] = P(arrayVariableDecl | regularVariableDecl).log

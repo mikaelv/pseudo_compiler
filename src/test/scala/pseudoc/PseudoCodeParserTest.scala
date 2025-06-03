@@ -408,25 +408,25 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check(
       "arr [10] : tableau d'entier",
       arrayVariableDecl(_),
-      Variables(Seq(VariableDecl("arr", ArrayIntType)))
+      Variables(Seq(ArrayVariableDecl("arr", ArrayIntType, 10)))
     )
     
     check(
       "myArray[5]: array of integers",
       arrayVariableDecl(_),
-      Variables(Seq(VariableDecl("myArray", ArrayIntType)))
+      Variables(Seq(ArrayVariableDecl("myArray", ArrayIntType, 5)))
     )
     
     check(
       "myArray  [5]  :  array of integer",
       arrayVariableDecl(_),
-      Variables(Seq(VariableDecl("myArray", ArrayIntType)))
+      Variables(Seq(ArrayVariableDecl("myArray", ArrayIntType, 5)))
     )
     
     check(
       "myArray[5]   :array of integers",
       arrayVariableDecl(_),
-      Variables(Seq(VariableDecl("myArray", ArrayIntType)))
+      Variables(Seq(ArrayVariableDecl("myArray", ArrayIntType, 5)))
     )
   }
 
@@ -434,6 +434,6 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
     check(
       "Variables:\narr [10] : tableau d'entier",
       variables(_),
-      Variables(Seq(VariableDecl("arr", ArrayIntType)))
+      Variables(Seq(ArrayVariableDecl("arr", ArrayIntType, 10)))
     )
   }

@@ -453,3 +453,20 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
         fail(extra.trace().msg)
     }
   }
+
+  test("array size is respected in initialization") {
+    val code = 
+      """Algorithme: test
+        |Variables:
+        |  arr [7] : tableau d'entier
+        |Début
+        |Fin""".stripMargin
+
+    val program = PseudoInterpreter.parseTypeCheckAndEval(code) match {
+      case Right(result) => 
+        val array = result.vars("arr").asInstanceOf[Array[Int]]
+        array.length should be(7)
+        array should be(Array(0, 0, 0, 0, 0, 0, 0)) // Should be filled with zeros
+      case Left(error) => fail(s"Parsing failed: $error")
+    }
+  }
