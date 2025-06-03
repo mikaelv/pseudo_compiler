@@ -19,24 +19,24 @@ class PseudoCodeExamplesTest extends AnyWordSpec {
           |Variables :
           |    l, r, m : entier
           |    iter, pos, val : entier
-          |    T [10] : tableau d’entier
+          |    T [10] : tableau d'entier
           |Début
-          |    T ← {1, 1, 2, 3, 5, 8, 13, 21, 34, 55}
+          |    T <- {1, 1, 2, 3, 5, 8, 13, 21, 34, 55}
           |    Lire(val)
-          |    pos ← −1
-          |    iter ← 0
-          |    l ← 1
-          |    r ← 10
-          |    Tant que l ≤ r ET pos = −1 Faire
-          |        iter ← iter + 1
-          |        m ← l + (r − l)/2
+          |    pos <- −1
+          |    iter <- 0
+          |    l <- 1
+          |    r <- 10
+          |    Tant que l <= r ET pos = −1 Faire
+          |        iter <- iter + 1
+          |        m <- l + (r − l)/2
           |        Si T [m] = val Alors
-          |            pos ← m
+          |            pos <- m
           |        Sinon
           |            Si T [m] < val Alors
-          |                l ← m + 1
+          |                l <- m + 1
           |            Sinon
-          |                r ← m − 1
+          |                r <- m − 1
           |            Fin Si
           |        Fin Si
           |    Fin Tant que

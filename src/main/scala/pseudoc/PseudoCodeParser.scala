@@ -5,7 +5,7 @@ import fastparse.JavaWhitespace.*
 import pseudoc.ArrayExpressionParser.arrayExpr
 import pseudoc.BooleanExpressionParser.{boolExpr, boolFactor, comparisonExpr}
 import pseudoc.IntExpressionParser.{intExpr, intLiteral}
-import pseudoc.Lexical.{identifier, lineFeed, spaceLF, tpe}
+import pseudoc.Lexical.{arrayIntType, identifier, lineFeed, spaceLF, tpe}
 import pseudoc.StringExpressionParser.stringExpression
 import pseudoc.ast.*
 
@@ -28,9 +28,17 @@ object PseudoCodeParser {
     P("Algorithme" ~ ":" ~ identifier).map(Algorithm.apply)
 
   /** syntax: ```s0, s1, s2: string``` */
-  def variableDecl[$: P]: P[Variables] =
+  def regularVariableDecl[$: P]: P[Variables] =
     P(identifier.rep(1, sep=",") ~ ":" ~ tpe).map((varNames, tpe) =>
-      Variables(varNames.map(varName => VariableDecl(varName, tpe)))).log
+      Variables(varNames.map(varName => VariableDecl(varName, tpe))))
+
+  /** syntax: ```arr [10] : tableau d'entier``` */
+  def arrayVariableDecl[$: P]: P[Variables] =
+    P(identifier ~ "[" ~ intLiteral ~ "]" ~ ":" ~ arrayIntType).map { case (varName, size, arrayType) =>
+      Variables(Seq(VariableDecl(varName, arrayType)))
+    }
+
+  def variableDecl[$: P]: P[Variables] = P(arrayVariableDecl | regularVariableDecl).log
 
   /** One line per type */
   def variables[$: P]: P[Variables] = P(

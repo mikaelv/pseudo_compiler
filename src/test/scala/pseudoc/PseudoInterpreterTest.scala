@@ -430,3 +430,26 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
     exception.getMessage should include("Array")
     exception.getMessage should include("x")
   }
+
+  test("array declaration with size syntax") {
+    val code = 
+      """Algorithme: test
+        |Variables:
+        |  arr [5] : tableau d'entier
+        |  x: entier
+        |Début
+        |  arr <- {1, 2, 3, 4, 5}
+        |  x <- arr[2]
+        |Fin""".stripMargin
+
+    parse(code, program(_)) match {
+      case Parsed.Success(program, index) =>
+        val vars = VarMap("arr" -> Array.empty[Int], "x" -> 0)
+        val result = program.statements.foldLeft(EvalResult(TestConsoleOutput(), vars)) { (res, stmt) =>
+          evalWithVars(stmt, res.vars, res.console)
+        }
+        result.vars("x") should be(3) // arr[2] = 3
+      case Parsed.Failure(stack, idx, extra) =>
+        fail(extra.trace().msg)
+    }
+  }

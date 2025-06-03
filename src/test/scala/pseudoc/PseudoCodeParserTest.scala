@@ -403,3 +403,37 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       )
     )
   }
+
+  test("array variable declaration with size") {
+    check(
+      "arr [10] : tableau d'entier",
+      arrayVariableDecl(_),
+      Variables(Seq(VariableDecl("arr", ArrayIntType)))
+    )
+    
+    check(
+      "myArray[5]: array of integers",
+      arrayVariableDecl(_),
+      Variables(Seq(VariableDecl("myArray", ArrayIntType)))
+    )
+    
+    check(
+      "myArray  [5]  :  array of integer",
+      arrayVariableDecl(_),
+      Variables(Seq(VariableDecl("myArray", ArrayIntType)))
+    )
+    
+    check(
+      "myArray[5]   :array of integers",
+      arrayVariableDecl(_),
+      Variables(Seq(VariableDecl("myArray", ArrayIntType)))
+    )
+  }
+
+  test("variables section with array declaration") {
+    check(
+      "Variables:\narr [10] : tableau d'entier",
+      variables(_),
+      Variables(Seq(VariableDecl("arr", ArrayIntType)))
+    )
+  }

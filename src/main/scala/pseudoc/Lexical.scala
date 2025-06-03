@@ -39,8 +39,6 @@ object Lexical {
     "\"" ~/ (strChars).rep.! ~ "\""
   ).map(_.replaceAll("\\\\NL", "\n")).map(StringLiteral.apply)
 
-
-
   def stringType[$: P]: P[PseudoType.StringType.type] = StringIn(
     "chaine de caracteres",
     "chaine de caractères",
@@ -50,12 +48,23 @@ object Lexical {
     "string",
     "str"
   ).map(_ => PseudoType.StringType)
+
   def intType[$: P]: P[PseudoType.IntType.type] =
     StringIn("int", "integer", "entier").map(_ => PseudoType.IntType)
+
   def boolType[$: P]: P[PseudoType.BoolType.type] =
     StringIn("bool", "boolean", "booléen").map(_ => PseudoType.BoolType)
+
   def arrayIntType[$: P]: P[PseudoType.ArrayIntType.type] =
-    StringIn("tableau[entier]", "array[int]", "arrayint").map(_ => PseudoType.ArrayIntType)
+    StringIn(
+      "tableau[entier]", 
+      "array[int]", 
+      "arrayint",
+      "tableau d'entier",
+      "tableau d'entiers", 
+      "array of integer",
+      "array of integers"
+    ).map(_ => PseudoType.ArrayIntType)
 
   def tpe[$: P]: P[PseudoType] = P(arrayIntType | stringType | intType | boolType)
 
