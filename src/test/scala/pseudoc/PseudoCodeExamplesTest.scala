@@ -1,10 +1,8 @@
 package pseudoc
 
+import org.scalatest.EitherValues.*
+import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.wordspec.AnyWordSpec
-import fastparse._
-import PseudoCodeParser.parseProgram
-import org.scalatest.matchers.should.Matchers._
-import org.scalatest.EitherValues._
 
 class PseudoCodeExamplesTest extends AnyWordSpec {
   def run(code: String): EvalResult = {
@@ -22,7 +20,7 @@ class PseudoCodeExamplesTest extends AnyWordSpec {
           |Début
           |    T <- {1, 1, 2, 3, 5, 8, 13, 21, 34, 55}
           |    Lire(val)
-          |    pos <- −1
+          |    pos <- -1
           |    iter <- 0
           |    l <- 1
           |    r <- 10

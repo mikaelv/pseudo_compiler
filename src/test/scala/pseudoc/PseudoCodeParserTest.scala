@@ -31,12 +31,12 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
   test("arithmetic expression"):
     implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType, "y" -> IntType))
     check(
-      "-234 +  3*12 - x/2*y",
+      "-234 +  -3*12 - x/2*y",
       expression(_),
       IntAddSub(
         IntLiteral(-234),
         Seq(
-          (Add, IntMultDiv(IntLiteral(3), Seq(Mult -> IntLiteral(12)))),
+          (Add, IntMultDiv(IntLiteral(-3), Seq(Mult -> IntLiteral(12)))),
           (Sub, IntMultDiv(IntRef("x"), Seq(Div -> IntLiteral(2), Mult -> IntRef("y"))))
         )
       )
@@ -262,9 +262,9 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
 
   test("variable assignment with integer"):
     check(
-      "x <- 42",
+      "x <- -42",
       assignmentNoSymbols(_),
-      Assignment("x", IntLiteral(42))
+      Assignment("x", IntLiteral(-42))
     )
 
   test("variable assignment with string"):

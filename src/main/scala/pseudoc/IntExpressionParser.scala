@@ -6,7 +6,6 @@ import pseudoc.ast.{ArrayAccess, ArrayRef, IntAddSub, IntExpression, IntLiteral,
 import fastparse.*
 import JavaWhitespace.*
 import pseudoc.PseudoCodeParser.variableReference
-import pseudoc.PseudoType
 
 object IntExpressionParser {
 
