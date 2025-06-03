@@ -8,8 +8,7 @@ import org.scalatest.EitherValues._
 
 class PseudoCodeExamplesTest extends AnyWordSpec {
   def run(code: String): EvalResult = {
-    val program = parseProgram(code).value
-    PseudoInterpreter.evalProgram(program)
+    PseudoInterpreter.run(code).value
   }
 
   "binary search" should {

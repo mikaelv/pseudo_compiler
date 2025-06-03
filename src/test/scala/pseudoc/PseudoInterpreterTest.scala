@@ -1,6 +1,7 @@
 package pseudoc
 
 import fastparse.*
+import org.scalatest.EitherValues
 import org.scalatest.funsuite.AnyFunSuiteLike
 import org.scalatest.matchers.should.Matchers
 import pseudoc.PseudoCodeParser.*
@@ -8,7 +9,7 @@ import pseudoc.PseudoInterpreter.{eval, evalWithVars}
 import pseudoc.PseudoType.{ArrayIntType, BoolType, IntType}
 import pseudoc.ast.*
 
-class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
+class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherValues:
   def statementNoSymbols[$: P]: P[Statement] = PseudoCodeParser.statement(symbols = SymbolTable())
 
   def assignmentNoSymbols[$: P]: P[Assignment] = PseudoCodeParser.assignment(symbols = SymbolTable())
@@ -462,11 +463,8 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers:
         |Début
         |Fin""".stripMargin
 
-    val program = PseudoInterpreter.parseTypeCheckAndEval(code) match {
-      case Right(result) => 
-        val array = result.vars("arr").asInstanceOf[Array[Int]]
-        array.length should be(7)
-        array should be(Array(0, 0, 0, 0, 0, 0, 0)) // Should be filled with zeros
-      case Left(error) => fail(s"Parsing failed: $error")
-    }
+    val result = PseudoInterpreter.run(code).value
+    val array = result.vars("arr").asInstanceOf[Array[Int]]
+    array.length should be(7)
+    array should be(Array(0, 0, 0, 0, 0, 0, 0)) // Should be filled with zeros
   }

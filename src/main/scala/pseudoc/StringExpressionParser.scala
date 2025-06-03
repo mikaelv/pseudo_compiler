@@ -27,5 +27,14 @@ object StringExpressionParser {
     ) ~ "(" ~ expression.rep(min=1, ",") ~ ")"
   ).map(concat => FunctionCall("print", concat))
 
+  def read[$: P](implicit symbols: SymbolTable): P[FunctionCall] = P(
+    StringIn(
+      "Lire",
+      "lire",
+      "Read",
+      "read",
+    ) ~ "(" ~ variableReference ~ ")"
+  ).map(varRef => FunctionCall("read", Seq(varRef)))
+
 
 }

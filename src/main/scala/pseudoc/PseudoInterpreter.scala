@@ -14,7 +14,7 @@ object PseudoInterpreter {
    * @param console Console output implementation
    * @return Either an error message or the evaluation result
    */
-  def parseTypeCheckAndEval(
+  def run(
       source: String,
       console: ConsoleOutput = DefaultConsoleOutput()
   ): Either[String, EvalResult] = {
@@ -77,13 +77,13 @@ object PseudoInterpreter {
   }
 
   // TODO call from PseudoInterpreterTest
-  def evalProgram(program: Program, console: ConsoleOutput = DefaultConsoleOutput()): EvalResult = {
+  /*def evalProgram(program: Program, console: ConsoleOutput = DefaultConsoleOutput()): EvalResult = {
     val vars = VarMap.empty // TODO initialize from declarations
 
     program.statements.foldLeft(EvalResult(console, vars)) { case (res, stmt) =>
       evalWithVars(stmt, res.vars, res.console)
     }
-  }
+  }*/
 
   // New evaluation method that returns both console output and updated variables
   def evalWithVars(
@@ -106,6 +106,7 @@ object PseudoInterpreter {
           res + evalExpr(expr, vars)
         }
         EvalResult(console.print(str), vars)
+
 
 
       case ifStmt: IfStatement =>
@@ -209,7 +210,6 @@ object PseudoInterpreter {
       case expr: IntExpression    => evalIntExpr(expr, vars)
       case expr: BoolExpression   => evalBoolExpr(expr, vars)
       case expr: ArrayExpression  => evalArrayExpr(expr, vars)
-      case _ => throw new RuntimeException(s"Unsupported expression type: ${assign.value.getClass}")
     }
 
     vars.store(assign.variable, value)
