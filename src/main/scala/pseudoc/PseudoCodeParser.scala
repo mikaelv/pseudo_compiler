@@ -60,7 +60,7 @@ object PseudoCodeParser {
   ).map(ForLoop.apply)
 
   def whileLoop[$: P](implicit symbols: SymbolTable): P[WhileLoop] = P(
-    StringIn("Tant que", "While") ~ boolFactor ~ StringIn("Faire", "do") ~
+    StringIn("Tant que", "While") ~ boolExpr ~ StringIn("Faire", "do") ~
       statement.rep ~ StringIn("Fin Tant que", "fin tant que", "End While", "end while")
   ).map(WhileLoop.apply)
 

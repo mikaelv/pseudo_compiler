@@ -44,7 +44,7 @@ class PseudoCodeExamplesTest extends AnyWordSpec {
           |""".stripMargin
 
       val res = run(code, "5\n")
-      res.vars("pos") shouldBe (4)
+      res.vars("pos") shouldBe (5)
 
     }
 
