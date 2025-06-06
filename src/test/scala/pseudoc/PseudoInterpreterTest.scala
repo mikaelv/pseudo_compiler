@@ -14,69 +14,94 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
 
   def assignmentNoSymbols[$: P]: P[Assignment] = PseudoCodeParser.assignment(symbols = SymbolTable())
 
+  // Helper function similar to PseudoCodeExamplesTest
+  def run(code: String, input: String = ""): EvalResult = {
+    PseudoInterpreter.run(code, TestConsoleIO(input = input)).value
+  }
+
+  // Helper for testing statements with symbols
+  def testStatement(
+    code: String, 
+    symbols: Map[String, PseudoType], 
+    vars: VarMap, 
+    expectedOutput: String
+  ): Unit = {
+    implicit val symbolTable: SymbolTable = SymbolTable(symbols)
+    val Parsed.Success(stmt, _) = parse(code, statement(_))
+    val console = eval(stmt, vars, TestConsoleIO())
+    console.getOutput shouldBe expectedOutput
+  }
+
+  // Helper for testing statements with symbols and checking vars
+  def testStatementWithVars(
+    code: String, 
+    symbols: Map[String, PseudoType], 
+    vars: VarMap, 
+    expectedOutput: String,
+    expectedVars: VarMap
+  ): Unit = {
+    implicit val symbolTable: SymbolTable = SymbolTable(symbols)
+    val Parsed.Success(stmt, _) = parse(code, statement(_))
+    val result = evalStmt(stmt, vars, TestConsoleIO())
+    result.console.getOutput shouldBe expectedOutput
+    result.vars shouldBe expectedVars
+  }
+
+  // Helper for testing assignments
+  def testAssignment(
+    variable: String,
+    expression: Expression,
+    initialVars: VarMap,
+    expectedVarValue: Any,
+    expectedOutput: String = ""
+  ): Unit = {
+    val assignment = Assignment(variable, expression)
+    val result = evalStmt(assignment, initialVars, TestConsoleIO())
+    result.vars(variable) should be(expectedVarValue)
+    result.console.getOutput should be(expectedOutput)
+  }
+
   test("for loop"):
-    implicit val symbols: SymbolTable = SymbolTable(Map("i" -> IntType))
     val code =
       """Pour i <- 1 à 10 Faire
         |  Ecrire("Valeur de i: ", i, "\NL")
         |Fin Pour""".stripMargin
-    val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, VarMap.empty, TestConsoleIO())
-
-    // Assert that output contains expected text
     val expected = (1 to 10).map(i => s"Valeur de i: $i\n").mkString
-    console.getOutput shouldBe expected
+    testStatement(code, Map("i" -> IntType), VarMap.empty, expected)
 
   test("if statement - true condition"):
-    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     val code =
       """Si x = 5 Alors
         |  Ecrire("x is 5\NL")
         |Fin Si""".stripMargin
-    val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, VarMap("x" -> 5), TestConsoleIO())
-
-    console.getOutput shouldBe "x is 5\n"
+    testStatement(code, Map("x" -> IntType), VarMap("x" -> 5), "x is 5\n")
 
   test("if statement - false condition"):
-    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     val code =
       """Si x = 5 Alors
         |  Ecrire("x is 5\NL")
         |Fin Si""".stripMargin
-    val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, VarMap("x" -> 10), TestConsoleIO())
-
-    console.getOutput shouldBe ""
+    testStatement(code, Map("x" -> IntType), VarMap("x" -> 10), "")
 
   test("if-else statement - true condition"):
-    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     val code =
       """Si x = 5 Alors
         |  Ecrire("x is 5\NL")
         |Sinon
         |  Ecrire("x is not 5\NL")
         |Fin Si""".stripMargin
-    val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, VarMap("x" -> 5), TestConsoleIO())
-
-    console.getOutput shouldBe "x is 5\n"
+    testStatement(code, Map("x" -> IntType), VarMap("x" -> 5), "x is 5\n")
 
   test("if-else statement - false condition"):
-    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     val code =
       """Si x = 5 Alors
         |  Ecrire("x is 5\NL")
         |Sinon
         |  Ecrire("x is not 5\NL")
         |Fin Si""".stripMargin
-    val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, VarMap("x" -> 10), TestConsoleIO())
-
-    console.getOutput shouldBe "x is not 5\n"
+    testStatement(code, Map("x" -> IntType), VarMap("x" -> 10), "x is not 5\n")
 
   test("nested if statements"):
-    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     val code =
       """Si x > 0 Alors
         |  Si x < 10 Alors
@@ -87,27 +112,14 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         |Sinon
         |  Ecrire("x is less than or equal to 0\NL")
         |Fin Si""".stripMargin
-    val Parsed.Success(stmt, _) = parse(code, statement(_))
-    val console = eval(stmt, VarMap("x" -> 5), TestConsoleIO())
-
-    console.getOutput shouldBe "x is between 0 and 10\n"
+    testStatement(code, Map("x" -> IntType), VarMap("x" -> 5), "x is between 0 and 10\n")
 
   test("variable assignment with type checking - compatible types") {
     // String variable
-    val vars = VarMap("message" -> "")
-    val assignment = Assignment("message", StringLiteral("Hello"))
-    val result = evalStmt(assignment, vars, TestConsoleIO())
-
-    result.vars("message") should be("Hello")
-    result.console.getOutput should be("")
-
+    testAssignment("message", StringLiteral("Hello"), VarMap("message" -> ""), "Hello")
+    
     // Integer variable with integer literal
-    val intVars = VarMap("counter" -> 0)
-    val intAssignment = Assignment("counter", IntLiteral(42))
-    val intResult = evalStmt(intAssignment, intVars, TestConsoleIO())
-
-    intResult.vars("counter") should be(42)
-    intResult.console.getOutput should be("")
+    testAssignment("counter", IntLiteral(42), VarMap("counter" -> 0), 42)
   }
 
   test("variable assignment with type checking - incompatible types") {
@@ -195,22 +207,30 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
   }
 
   test("assign another variable") {
-    val code = "Algorithme: test\nVariables:\ns0, s1: string\n" +
-      "Début\ns1 <- s0\nFin"
-
-    parse(code, program(_)) match {
-      case Parsed.Success(program, index) =>
-        val stmt = program.statements.head
-        val vars = VarMap("s0" -> "hello", "s1" -> "")
-        val result = evalStmt(stmt, vars)
-        result.vars("s1") should be("hello")
-      case Parsed.Failure(stack, idx, extra) =>
-        fail(extra.trace().msg)
-    }
+    val code = 
+      """Algorithme: test
+        |Variables:
+        |  s0, s1: string
+        |Début
+        |  s1 <- s0
+        |Fin""".stripMargin
+    
+    // We need to provide initial values for s0 and s1
+    // Since run() creates variables from declarations, we need to modify the program to include initial values
+    val codeWithInitialValues = 
+      """Algorithme: test
+        |Variables:
+        |  s0, s1: string
+        |Début
+        |  s0 <- "hello"
+        |  s1 <- s0
+        |Fin""".stripMargin
+    
+    val result = run(codeWithInitialValues)
+    result.vars("s1") should be("hello")
   }
 
   test("multiple assignments with different types") {
-    // Create a complete program with Variables section for context-aware parsing
     val code =
       """Algorithme: test
         |Variables:
@@ -218,6 +238,9 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         |  i0, i1: entier
         |  b0, b1: booléen
         |Début
+        |  s0 <- "hello"
+        |  i0 <- 12
+        |  b0 <- true
         |  Si Vrai Alors
         |    s1 <- s0 + " world"
         |    i1 <- i0 + 3
@@ -225,20 +248,10 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         |  Fin Si
         |Fin""".stripMargin
 
-    parse(code, program(_)) match {
-      case Parsed.Success(program, index) =>
-        // Extract the if statement
-        val stmt = program.statements.head
-        val vars =
-          VarMap("s0" -> "hello", "s1" -> "", "i0" -> 12, "i1" -> 0, "b0" -> true, "b1" -> false)
-        val result = evalStmt(stmt, vars)
-        result.vars("s1") should be("hello world")
-        result.vars("i1") should be(15)
-        result.vars("b1") shouldBe true
-
-      case f @ Parsed.Failure(stack, idx, extra) =>
-        fail(extra.trace().longTerminalsMsg)
-    }
+    val result = run(code)
+    result.vars("s1") should be("hello world")
+    result.vars("i1") should be(15)
+    result.vars("b1") shouldBe true
   }
 
   test("arithmetic operations") {
@@ -275,98 +288,67 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     val code = 
       """Algorithme: test
         |Variables:
-        |  arr: arrayint
+        |  arr [5] : tableau d'entier
         |Début
         |  arr <- {1, 2, 3, 4, 5}
         |Fin""".stripMargin
 
-    parse(code, program(_)) match {
-      case Parsed.Success(program, index) =>
-        val stmt = program.statements.head
-        val vars = VarMap("arr" -> Array.empty[Int])
-        val result = evalStmt(stmt, vars)
-        val resultArray = result.vars("arr").asInstanceOf[Array[Int]]
-        resultArray should be(Array(1, 2, 3, 4, 5))
-      case Parsed.Failure(stack, idx, extra) =>
-        fail(extra.trace().msg)
-    }
+    val result = run(code)
+    val resultArray = result.vars("arr").asInstanceOf[Array[Int]]
+    resultArray should be(Array(1, 2, 3, 4, 5))
   }
 
   test("array access") {
     val code = 
       """Algorithme: test
         |Variables:
-        |  arr: arrayint
+        |  arr [5] : tableau d'entier
         |  x: entier
         |Début
         |  arr <- {10, 20, 30, 40, 50}
         |  x <- arr[2]
         |Fin""".stripMargin
 
-    parse(code, program(_)) match {
-      case Parsed.Success(program, index) =>
-        val vars = VarMap("arr" -> Array.empty[Int], "x" -> 0)
-        val result = program.statements.foldLeft(EvalResult(TestConsoleIO(), vars)) { (res, stmt) =>
-          evalStmt(stmt, res.vars, res.console)
-        }
-        result.vars("x") should be(20) // Arrays are 1-indexed, so arr[2] = 20
-      case Parsed.Failure(stack, idx, extra) =>
-        fail(extra.trace().msg)
-    }
+    val result = run(code)
+    result.vars("x") should be(20) // Arrays are 1-indexed, so arr[2] = 20
   }
 
   test("array with variable assignment") {
     val code = 
       """Algorithme: test
         |Variables:
-        |  source: arrayint
-        |  target: arrayint
+        |  source [3] : tableau d'entier
+        |  target [3] : tableau d'entier
         |Début
         |  source <- {100, 200, 300}
         |  target <- source
         |Fin""".stripMargin
 
-    parse(code, program(_)) match {
-      case Parsed.Success(program, index) =>
-        val vars = VarMap("source" -> Array.empty[Int], "target" -> Array.empty[Int])
-        val result = program.statements.foldLeft(EvalResult(TestConsoleIO(), vars)) { (res, stmt) =>
-          evalStmt(stmt, res.vars, res.console)
-        }
-        val targetArray = result.vars("target").asInstanceOf[Array[Int]]
-        targetArray should be(Array(100, 200, 300))
-      case Parsed.Failure(stack, idx, extra) =>
-        fail(extra.trace().msg)
-    }
+    val result = run(code)
+    val targetArray = result.vars("target").asInstanceOf[Array[Int]]
+    targetArray should be(Array(100, 200, 300))
   }
 
   test("array access in arithmetic expression") {
     val code = 
       """Algorithme: test
         |Variables:
-        |  arr: arrayint
+        |  arr [4] : tableau d'entier
         |  result: entier
         |Début
         |  arr <- {5, 10, 15, 20}
         |  result <- arr[1] + arr[3] * 2
         |Fin""".stripMargin
 
-    parse(code, program(_)) match {
-      case Parsed.Success(program, index) =>
-        val vars = VarMap("arr" -> Array.empty[Int], "result" -> 0)
-        val result = program.statements.foldLeft(EvalResult(TestConsoleIO(), vars)) { (res, stmt) =>
-          evalStmt(stmt, res.vars, res.console)
-        }
-        result.vars("result") should be(35) // arr[1] + arr[3] * 2 = 5 + 15 * 2 = 35
-      case Parsed.Failure(stack, idx, extra) =>
-        fail(extra.trace().msg)
-    }
+    val result = run(code)
+    result.vars("result") should be(35) // arr[1] + arr[3] * 2 = 5 + 15 * 2 = 35
   }
 
   test("array access with variable index") {
     val code = 
       """Algorithme: test
         |Variables:
-        |  arr: arrayint
+        |  arr [5] : tableau d'entier
         |  index: entier
         |  value: entier
         |Début
@@ -375,16 +357,8 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         |  value <- arr[index]
         |Fin""".stripMargin
 
-    parse(code, program(_)) match {
-      case Parsed.Success(program, index) =>
-        val vars = VarMap("arr" -> Array.empty[Int], "index" -> 0, "value" -> 0)
-        val result = program.statements.foldLeft(EvalResult(TestConsoleIO(), vars)) { (res, stmt) =>
-          evalStmt(stmt, res.vars, res.console)
-        }
-        result.vars("value") should be(21) // arr[3] = 21
-      case Parsed.Failure(stack, idx, extra) =>
-        fail(extra.trace().msg)
-    }
+    val result = run(code)
+    result.vars("value") should be(21) // arr[3] = 21
   }
 
   test("empty array literal") {
@@ -469,21 +443,29 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
   }
 
   test("read a string variable from stdin") {
-    val vars = PseudoInterpreter.evalStmt(
-      FunctionCall("read", Seq(StringRef("s"))),
-      VarMap("s" -> ""),
-      TestConsoleIO(input = "hello world")
-    ).vars
-    vars("s") shouldBe("hello world")
+    val code =
+      """Algorithme: test
+        |Variables:
+        |  s: chaine
+        |Début
+        |  Lire(s)
+        |Fin""".stripMargin
+    
+    val result = run(code, "hello world")
+    result.vars("s") shouldBe("hello world")
   }
 
   test("read an int variable from stdin") {
-    val vars = PseudoInterpreter.evalStmt(
-      FunctionCall("read", Seq(IntRef("i"))),
-      VarMap("i" -> 0),
-      TestConsoleIO(input = "12")
-    ).vars
-    vars("i") shouldBe (12)
+    val code =
+      """Algorithme: test
+        |Variables:
+        |  i: entier
+        |Début
+        |  Lire(i)
+        |Fin""".stripMargin
+    
+    val result = run(code, "12")
+    result.vars("i") shouldBe (12)
   }
 
   test("read multiple variables") {
@@ -499,37 +481,38 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         |  Lire(b)
         |Fin""".stripMargin
 
-    val result = PseudoInterpreter.run(code, TestConsoleIO(input = "hello\n24\ntrue\n")).value
+    val result = run(code, "hello\n24\ntrue\n")
     result.vars("s") shouldBe("hello")
     result.vars("i") shouldBe(24)
     result.vars("b") shouldBe(true)
-
   }
 
   test("while loop - basic counting"):
-    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     val code =
       """Tant que x < 5 Faire
         |  Ecrire("x: ", x, "\NL")
         |  x <- x + 1
         |Fin Tant que""".stripMargin
-    val stmt = parse(code, statement(_)).get.value
-    val result = evalStmt(stmt, VarMap("x" -> 0), TestConsoleIO())
-    
-    result.console.getOutput shouldBe "x: 0\nx: 1\nx: 2\nx: 3\nx: 4\n"
-    result.vars("x") shouldBe 5
+    val result = testStatementWithVars(
+      code, 
+      Map("x" -> IntType), 
+      VarMap("x" -> 0), 
+      "x: 0\nx: 1\nx: 2\nx: 3\nx: 4\n",
+      VarMap("x" -> 5)
+    )
 
   test("while loop - condition false from start"):
-    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
     val code =
       """Tant que x < 0 Faire
         |  Ecrire("This should not print\NL")
         |Fin Tant que""".stripMargin
-    val stmt = parse(code, statement(_)).get.value
-    val result = evalStmt(stmt, VarMap("x" -> 5), TestConsoleIO())
-    
-    result.console.getOutput shouldBe ""
-    result.vars("x") shouldBe 5
+    testStatementWithVars(
+      code, 
+      Map("x" -> IntType), 
+      VarMap("x" -> 5), 
+      "",
+      VarMap("x" -> 5)
+    )
 
   test("while loop in complete program"):
     val code =
@@ -545,7 +528,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         |  Ecrire("Done!\NL")
         |Fin""".stripMargin
 
-    val result = PseudoInterpreter.run(code, TestConsoleIO()).value
+    val result = run(code)
     result.console.getOutput shouldBe "Countdown: 3\nCountdown: 2\nCountdown: 1\nDone!\n"
     result.vars("counter") shouldBe 0
 
