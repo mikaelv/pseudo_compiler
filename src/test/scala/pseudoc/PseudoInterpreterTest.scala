@@ -309,7 +309,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         val result = program.statements.foldLeft(EvalResult(TestConsoleIO(), vars)) { (res, stmt) =>
           evalStmt(stmt, res.vars, res.console)
         }
-        result.vars("x") should be(30) // Arrays are 0-indexed, so arr[2] = 30
+        result.vars("x") should be(20) // Arrays are 1-indexed, so arr[2] = 20
       case Parsed.Failure(stack, idx, extra) =>
         fail(extra.trace().msg)
     }
@@ -356,7 +356,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         val result = program.statements.foldLeft(EvalResult(TestConsoleIO(), vars)) { (res, stmt) =>
           evalStmt(stmt, res.vars, res.console)
         }
-        result.vars("result") should be(50) // arr[1] + arr[3] * 2 = 10 + 20 * 2 = 50
+        result.vars("result") should be(35) // arr[1] + arr[3] * 2 = 5 + 15 * 2 = 35
       case Parsed.Failure(stack, idx, extra) =>
         fail(extra.trace().msg)
     }
@@ -381,7 +381,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         val result = program.statements.foldLeft(EvalResult(TestConsoleIO(), vars)) { (res, stmt) =>
           evalStmt(stmt, res.vars, res.console)
         }
-        result.vars("value") should be(28) // arr[3] = 28
+        result.vars("value") should be(21) // arr[3] = 21
       case Parsed.Failure(stack, idx, extra) =>
         fail(extra.trace().msg)
     }
@@ -448,7 +448,7 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
         val result = program.statements.foldLeft(EvalResult(TestConsoleIO(), vars)) { (res, stmt) =>
           evalStmt(stmt, res.vars, res.console)
         }
-        result.vars("x") should be(3) // arr[2] = 3
+        result.vars("x") should be(2) // arr[2] = 2
       case Parsed.Failure(stack, idx, extra) =>
         fail(extra.trace().msg)
     }

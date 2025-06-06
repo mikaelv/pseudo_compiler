@@ -192,7 +192,7 @@ object PseudoInterpreter {
       case ArrayAccess(arrayExpr, indexExpr) =>
         val array = evalArrayExpr(arrayExpr, vars)
         val index = evalIntExpr(indexExpr, vars)
-        array(index)
+        array(index - 1)  // Convert from 1-based to 0-based indexing
       case IntMultDiv(base, ops) =>
         ops.foldLeft(evalIntExpr(base, vars)) { case (left, (op, right)) =>
           op match
