@@ -6,7 +6,7 @@ import org.scalatest.wordspec.AnyWordSpec
 
 class PseudoCodeExamplesTest extends AnyWordSpec {
   def run(code: String, input: String = ""): EvalResult = {
-    PseudoInterpreter.run(code, TestConsoleIO(input)).value
+    PseudoInterpreter.run(code, TestConsoleIO(input = input)).value
   }
 
   "binary search" should {
