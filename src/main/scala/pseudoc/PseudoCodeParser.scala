@@ -59,6 +59,11 @@ object PseudoCodeParser {
       statement.rep ~ StringIn("Fin Pour", "fin pour", "End For", "end for")
   ).map(ForLoop.apply)
 
+  def whileLoop[$: P](implicit symbols: SymbolTable): P[WhileLoop] = P(
+    StringIn("Tant que", "While") ~ boolFactor ~ StringIn("Faire", "do") ~
+      statement.rep ~ StringIn("Fin Tant que", "fin tant que", "End While", "end while")
+  ).map(WhileLoop.apply)
+
 
   def ifStatement[$: P](implicit symbols: SymbolTable): P[IfStatement] = P(
     StringIn("Si", "If") ~~ spaceLF ~ boolFactor ~
@@ -83,7 +88,7 @@ object PseudoCodeParser {
 
   // Context-aware statement parser
   def statement[$: P](implicit symbols: SymbolTable): P[Statement] = P(
-    (forLoop | ifStatement | StringExpressionParser.print | StringExpressionParser.read | assignment))
+    (forLoop | whileLoop | ifStatement | StringExpressionParser.print | StringExpressionParser.read | assignment))
 
   /** Parse a complete program consisting of algorithm, variables, and statements Uses context-aware
     * parsing to resolve variable references

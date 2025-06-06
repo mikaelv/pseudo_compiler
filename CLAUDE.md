@@ -1,5 +1,8 @@
 # Pseudo Compiler Project Guidelines
 
+## Methodology
+Always write tests first, ask for validation before implementing the production code.
+
 ## Running tests
 use sbt
 

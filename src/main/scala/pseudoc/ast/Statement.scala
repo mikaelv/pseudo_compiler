@@ -29,6 +29,23 @@ case class ForLoop(
   }
 }
 
+case class WhileLoop(
+    condition: BoolExpression,
+    statements: Seq[Statement]
+) extends Statement {
+  override def typeCheck(symbolTable: SymbolTable): Either[String, SymbolTable] = {
+    // Check condition
+    condition.typeCheck(symbolTable) match {
+      case Left(error) => Left(error)
+      case Right(_) => 
+        // Type check each statement in the loop body
+        statements.foldLeft[Either[String, SymbolTable]](Right(symbolTable)) { 
+          (result, stmt) => result.flatMap(stmt.typeCheck)
+        }
+    }
+  }
+}
+
 case class IfStatement(
                         condition: BoolExpression,
                         thenBranch: Seq[Statement],

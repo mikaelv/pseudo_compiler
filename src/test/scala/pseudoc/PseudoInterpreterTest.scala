@@ -506,3 +506,46 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
 
   }
 
+  test("while loop - basic counting"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
+    val code =
+      """Tant que x < 5 Faire
+        |  Ecrire("x: ", x, "\NL")
+        |  x <- x + 1
+        |Fin Tant que""".stripMargin
+    val stmt = parse(code, statement(_)).get.value
+    val result = evalStmt(stmt, VarMap("x" -> 0), TestConsoleIO())
+    
+    result.console.getOutput shouldBe "x: 0\nx: 1\nx: 2\nx: 3\nx: 4\n"
+    result.vars("x") shouldBe 5
+
+  test("while loop - condition false from start"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
+    val code =
+      """Tant que x < 0 Faire
+        |  Ecrire("This should not print\NL")
+        |Fin Tant que""".stripMargin
+    val stmt = parse(code, statement(_)).get.value
+    val result = evalStmt(stmt, VarMap("x" -> 5), TestConsoleIO())
+    
+    result.console.getOutput shouldBe ""
+    result.vars("x") shouldBe 5
+
+  test("while loop in complete program"):
+    val code =
+      """Algorithme: countdown
+        |Variables:
+        |  counter: entier
+        |Début
+        |  counter <- 3
+        |  Tant que counter > 0 Faire
+        |    Ecrire("Countdown: ", counter, "\NL")
+        |    counter <- counter - 1
+        |  Fin Tant que
+        |  Ecrire("Done!\NL")
+        |Fin""".stripMargin
+
+    val result = PseudoInterpreter.run(code, TestConsoleIO()).value
+    result.console.getOutput shouldBe "Countdown: 3\nCountdown: 2\nCountdown: 1\nDone!\n"
+    result.vars("counter") shouldBe 0
+

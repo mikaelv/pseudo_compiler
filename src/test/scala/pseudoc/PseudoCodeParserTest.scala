@@ -480,3 +480,39 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       FunctionCall("read", Seq(IntRef("i")))
     )
   }
+
+  test("while loop - French syntax"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
+    check(
+      "Tant que x < 10 Faire\nFin Tant que",
+      whileLoop(_),
+      WhileLoop(
+        Comparison(IntRef("x"), ComparisonOperator.LessThan, IntLiteral(10)),
+        Seq()
+      )
+    )
+
+  test("while loop - English syntax"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
+    check(
+      "While x < 10 do\nEnd While",
+      whileLoop(_),
+      WhileLoop(
+        Comparison(IntRef("x"), ComparisonOperator.LessThan, IntLiteral(10)),
+        Seq()
+      )
+    )
+
+  test("while loop with statements"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
+    check(
+      "Tant que x < 10 Faire\nx <- x + 1\nprint(x)\nFin Tant que",
+      whileLoop(_),
+      WhileLoop(
+        Comparison(IntRef("x"), ComparisonOperator.LessThan, IntLiteral(10)),
+        Seq(
+          Assignment("x", IntAddSub(IntRef("x"), Seq((Add, IntLiteral(1))))),
+          FunctionCall("print", Seq(IntRef("x")))
+        )
+      )
+    )

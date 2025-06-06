@@ -108,6 +108,15 @@ object PseudoInterpreter {
         }
         result
 
+      case w: WhileLoop =>
+        var currentResult = EvalResult(console, vars)
+        while (evalBoolExpr(w.condition, currentResult.vars)) {
+          currentResult = w.statements.foldLeft(currentResult) { (res, s) =>
+            evalStmt(s, res.vars, res.console)
+          }
+        }
+        currentResult
+
       case f @ FunctionCall("print", args) =>
         val str = args.foldLeft("") { case (res, expr) =>
           res + evalExpr(expr, vars)
