@@ -44,3 +44,17 @@ case class TestConsoleIO(output: String = "", input: String = "") extends Consol
 
   def getOutput: String = output
 }
+
+// Web implementation for browser usage
+case class WebConsoleIO(output: String = "") extends ConsoleIO {
+  def print(text: String): ConsoleIO = {
+    WebConsoleIO(output + text)
+  }
+
+  def readLine(): (String, ConsoleIO) = {
+    // For web version, we don't implement interactive input
+    ("", this)
+  }
+
+  def getOutput: String = output
+}
