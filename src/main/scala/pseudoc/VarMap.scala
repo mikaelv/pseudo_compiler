@@ -28,7 +28,7 @@ case class VarMap(v: Map[String, (Class[_], Any)]) {
       val isStringVariable = tpe.getSimpleName == "String"
       val isArrayVariable = tpe.getSimpleName.contains("Array")
       
-      val isValueNumeric = value.isInstanceOf[Byte] || value.isInstanceOf[Short] || value.isInstanceOf[Int]
+      val isValueNumeric = value.isInstanceOf[Int]
       val isCompatible = (isNumericVariable && isValueNumeric) ||
                         (isBooleanVariable && value.isInstanceOf[Boolean]) ||
                         (isStringVariable && value.isInstanceOf[String]) ||
