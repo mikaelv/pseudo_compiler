@@ -92,8 +92,6 @@ case class Assignment(variable: String, value: Expression) extends Statement {
                 // Add or update variable in symbol table
                 Right(symbolTable.addVariable(variable, exprType))
             }
-          case _ =>
-            Left(s"Cannot determine type of expression for assignment to variable '$variable'")
         }
     }
   }

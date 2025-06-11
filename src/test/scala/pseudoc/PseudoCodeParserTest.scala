@@ -42,6 +42,51 @@ class PseudoCodeParserTest extends AnyFunSuiteLike:
       )
     )
 
+  test("large integer literal"):
+    implicit val symbols: SymbolTable = SymbolTable()
+    check("2025", IntExpressionParser.intLiteral(_), IntLiteral(2025))
+    check("12345", IntExpressionParser.intLiteral(_), IntLiteral(12345))
+    check("-2025", IntExpressionParser.intLiteral(_), IntLiteral(-2025))
+
+  test("assignment with large integer"):
+    implicit val symbols: SymbolTable = SymbolTable(Map("x" -> IntType))
+    check(
+      "x <- 2025",
+      assignment(_),
+      Assignment("x", IntLiteral(2025))
+    )
+
+  test("complete program with large integer"):
+    val code = """Algorithme: test_large_int
+Variables:
+  x : entier
+  y : entier
+Debut
+  x <- 25
+  y <- 2025
+  Ecrire("x = ", x, "\NL")
+  Ecrire("y = ", y, "\NL")
+Fin"""
+    val result = parse(code, program(_))
+    result.isSuccess should be(true)
+    val prog = result.get.value
+    prog.statements should have length 4  // 2 assignments + 2 prints
+
+
+  test("large integer evaluation"):
+    val code = """Algorithme: test_eval
+Variables:
+  x : entier
+Debut
+  x <- 2025
+  Ecrire("Value: ", x, "\NL")
+Fin"""
+    
+    val console = TestConsoleIO()
+    val result = PseudoInterpreter.run(code, console)
+    result.isRight should be(true)
+    result.toOption.get.console.getOutput should include("2025")
+
   test("algorithme"):
     check(
       "Algorithme: recherche_dichotomique1",

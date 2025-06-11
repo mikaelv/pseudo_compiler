@@ -48,7 +48,7 @@ object PseudoInterpreter {
 
   /** Create a VarMap from variable declarations
     */
-  private def createVarMapFromDeclarations(variables: Variables): VarMap = {
+  private[pseudoc] def createVarMapFromDeclarations(variables: Variables): VarMap = {
     val initialValues = variables.vars.map {
       case VariableDecl(name, tpe) =>
         val initialValue = tpe match {
