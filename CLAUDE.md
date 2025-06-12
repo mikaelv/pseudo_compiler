@@ -6,6 +6,13 @@ Always write tests first, ask for validation before implementing the production 
 ## Running tests
 use sbt
 
+## Commits
+- All commits should start with [CLAUDE]
+- Do not add links to claude.ai or "authored by"
+- Use the exact phrase(s) from user request(s) in the commit message
+- Can add your own implementation details as well
+
+
 ## Array Type System Implementation
 
 ### Array Type Architecture

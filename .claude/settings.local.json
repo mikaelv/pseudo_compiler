@@ -4,7 +4,8 @@
       "Bash(sbt test)",
       "Bash(grep:*)",
       "Bash(sbt:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }
