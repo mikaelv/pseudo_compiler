@@ -46,15 +46,32 @@ case class TestConsoleIO(output: String = "", input: String = "") extends Consol
 }
 
 // Web implementation for browser usage
-case class WebConsoleIO(output: String = "") extends ConsoleIO {
+case class WebConsoleIO(output: String = "", inputQueue: List[String] = List.empty) extends ConsoleIO {
   def print(text: String): ConsoleIO = {
-    WebConsoleIO(output + text)
+    WebConsoleIO(output + text, inputQueue)
   }
 
   def readLine(): (String, ConsoleIO) = {
-    // For web version, we don't implement interactive input
-    ("", this)
+    inputQueue match {
+      case head :: tail =>
+        // Use pre-provided input from queue
+        (head, WebConsoleIO(output, tail))
+      case Nil =>
+        // Prompt user for input via browser prompt
+        try {
+          import org.scalajs.dom.window
+          val input = Option(window.prompt("Please enter input:")).getOrElse("")
+          (input, this)
+        } catch {
+          case _: Exception => ("", this) // Fallback if prompt fails
+        }
+    }
   }
 
   def getOutput: String = output
+  
+  // Method to pre-populate input for batch processing
+  def withInput(inputs: String*): WebConsoleIO = {
+    WebConsoleIO(output, inputs.toList)
+  }
 }

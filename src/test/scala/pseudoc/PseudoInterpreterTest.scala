@@ -532,3 +532,51 @@ class PseudoInterpreterTest extends AnyFunSuiteLike with Matchers with EitherVal
     result.console.getOutput shouldBe "Countdown: 3\nCountdown: 2\nCountdown: 1\nDone!\n"
     result.vars("counter") shouldBe 0
 
+  test("WebConsoleIO with pre-populated input queue") {
+    val webConsole = WebConsoleIO().withInput("hello", "42", "true")
+    
+    val (input1, console1) = webConsole.readLine()
+    input1 shouldBe "hello"
+    
+    val (input2, console2) = console1.readLine()
+    input2 shouldBe "42"
+    
+    val (input3, console3) = console2.readLine()
+    input3 shouldBe "true"
+    
+    // After consuming all inputs, should return empty string
+    val (input4, console4) = console3.readLine()
+    input4 shouldBe ""
+  }
+
+  test("WebConsoleIO preserves output through input operations") {
+    val webConsole = WebConsoleIO().withInput("test input")
+    val consoleWithOutput = webConsole.print("Output: ")
+    
+    val (input, finalConsole) = consoleWithOutput.readLine()
+    input shouldBe "test input"
+    finalConsole.getOutput shouldBe "Output: "
+  }
+
+  test("WebConsoleIO with reading in a complete program") {
+    val code =
+      """Algorithme: web_input_test
+        |Variables:
+        |  name: chaine
+        |  age: entier
+        |Début
+        |  Ecrire("Enter your name: ")
+        |  Lire(name)
+        |  Ecrire("Enter your age: ")
+        |  Lire(age)
+        |  Ecrire("Hello ", name, ", you are ", age, " years old.\NL")
+        |Fin""".stripMargin
+
+    val webConsole = WebConsoleIO().withInput("Alice", "25")
+    val result = PseudoInterpreter.run(code, webConsole).value
+    
+    result.console.getOutput shouldBe "Enter your name: Enter your age: Hello Alice, you are 25 years old.\n"
+    result.vars("name") shouldBe "Alice"
+    result.vars("age") shouldBe 25
+  }
+
