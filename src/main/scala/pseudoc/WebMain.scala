@@ -23,6 +23,30 @@ object WebMain {
     title.textContent = "Pseudo Code Interpreter"
     body.appendChild(title)
     
+    // Create dropdown for algorithm examples
+    val dropdownLabel = document.createElement("label")
+    dropdownLabel.textContent = "Algorithm Examples:"
+    body.appendChild(dropdownLabel)
+    
+    val dropdown = document.createElement("select").asInstanceOf[dom.html.Select]
+    dropdown.id = "algorithmSelector"
+    dropdown.onchange = (_: dom.Event) => loadSelectedAlgorithm()
+    
+    // Add options to dropdown
+    val defaultOption = document.createElement("option").asInstanceOf[dom.html.Option]
+    defaultOption.value = "default"
+    defaultOption.textContent = "-- Select an example --"
+    dropdown.appendChild(defaultOption)
+    
+    AlgorithmExamples.examples.foreach { case (key, example) =>
+      val option = document.createElement("option").asInstanceOf[dom.html.Option]
+      option.value = key
+      option.textContent = example.name
+      dropdown.appendChild(option)
+    }
+    
+    body.appendChild(dropdown)
+    
     // Create input textarea
     val inputLabel = document.createElement("label")
     inputLabel.textContent = "Enter your pseudo code:"
@@ -94,6 +118,23 @@ Fin"""
       case Right(result) =>
         outputArea.textContent = result.console.getOutput
         outputArea.style.color = "black"
+    }
+  }
+  
+  private def loadSelectedAlgorithm(): Unit = {
+    val dropdown = document.getElementById("algorithmSelector").asInstanceOf[dom.html.Select]
+    val inputArea = document.getElementById("pseudoCodeInput").asInstanceOf[dom.html.TextArea]
+    
+    val selectedKey = dropdown.value
+    
+    if (selectedKey != "default") {
+      AlgorithmExamples.examples.get(selectedKey) match {
+        case Some(example) =>
+          inputArea.value = example.code
+        case None =>
+          // Should not happen, but handle gracefully
+          inputArea.value = "// Algorithm not found"
+      }
     }
   }
 }
