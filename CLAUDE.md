@@ -1,5 +1,8 @@
 # Pseudo Compiler Project Guidelines
 
+## Description
+This is a Scala.Js project that allows a user to type pseudo-code in a text area and then run it.
+
 ## Methodology
 Always write tests first, ask for validation before implementing the production code.
 

@@ -79,6 +79,61 @@ pre {
     white-space: pre-wrap;
 }
 
+#output {
+    width: 100%;
+    height: 200px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    overflow: auto;
+}
+
+/* Ace editor styling */
+#pseudoCodeInput {
+    height: 200px;
+    width: 100%;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+}
+
+#pseudoCodeInput.ace_focus {
+    border-color: #007acc;
+}
+
+/* Pseudo-code syntax highlighting for Ace */
+.ace_keyword.ace_control.ace_pseudocode {
+    color: #0000ff !important;
+    font-weight: bold;
+}
+
+.ace_support.ace_function.ace_pseudocode {
+    color: #800080 !important;
+    font-weight: bold;
+}
+
+.ace_storage.ace_type.ace_pseudocode {
+    color: #008000 !important;
+    font-weight: bold;
+}
+
+.ace_string.ace_quoted.ace_double.ace_pseudocode {
+    color: #a31515 !important;
+}
+
+.ace_constant.ace_numeric.ace_pseudocode {
+    color: #098658 !important;
+}
+
+.ace_keyword.ace_operator.ace_pseudocode {
+    color: #000000 !important;
+    font-weight: bold;
+}
+
+.ace_variable.ace_other.ace_pseudocode {
+    color: #001080 !important;
+}
+
 .error {
     color: #d32f2f;
     background-color: #ffebee;
@@ -89,4 +144,41 @@ pre {
     color: #2e7d32;
     background-color: #e8f5e8;
     border-color: #4caf50;
+}
+
+/* Pseudo-code syntax highlighting */
+.cm-keyword {
+    color: #0000ff;
+    font-weight: bold;
+}
+
+.cm-builtin {
+    color: #800080;
+    font-weight: bold;
+}
+
+.cm-type {
+    color: #008000;
+    font-weight: bold;
+}
+
+.cm-string {
+    color: #a31515;
+}
+
+.cm-number {
+    color: #098658;
+}
+
+.cm-operator {
+    color: #000000;
+    font-weight: bold;
+}
+
+.cm-variable {
+    color: #001080;
+}
+
+.cm-punctuation {
+    color: #000000;
 }

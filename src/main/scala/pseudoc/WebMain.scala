@@ -47,17 +47,23 @@ object WebMain {
     
     body.appendChild(dropdown)
     
-    // Create input textarea
+    // Create Ace editor
     val inputLabel = document.createElement("label")
     inputLabel.textContent = "Enter your pseudo code:"
     body.appendChild(inputLabel)
     
-    val inputArea = document.createElement("textarea").asInstanceOf[dom.html.TextArea]
-    inputArea.id = "pseudoCodeInput"
-    inputArea.style.width = "100%"
-    inputArea.style.height = "200px"
-    inputArea.style.fontFamily = "monospace"
-    inputArea.value = """Algorithme: hello_world
+    val editorDiv = document.createElement("div").asInstanceOf[dom.html.Div]
+    editorDiv.id = "pseudoCodeInput"
+    
+    body.appendChild(editorDiv)
+    
+    // Initialize Ace Editor
+    val ace = dom.window.asInstanceOf[scala.scalajs.js.Dynamic].ace
+    if (ace != null) {
+      val editor = ace.edit("pseudoCodeInput")
+      editor.setTheme("ace/theme/textmate")
+      editor.session.setMode("ace/mode/pseudocode")
+      editor.setValue("""Algorithme: hello_world
 Variables:
   x : entier
   message : chaine
@@ -66,8 +72,19 @@ Debut
   x <- 25
   message <- "Hello World "
   Ecrire(message, x, "\NL")
-Fin"""
-    body.appendChild(inputArea)
+Fin""", -1)
+      
+      // Configure editor options
+      editor.setOptions(scala.scalajs.js.Dynamic.literal(
+        "fontSize" -> "14px",
+        "showLineNumbers" -> true,
+        "wrap" -> true,
+        "tabSize" -> 2
+      ))
+      
+      // Store reference to editor for later use
+      dom.window.asInstanceOf[scala.scalajs.js.Dynamic].pseudoCodeEditor = editor
+    }
     
     // Create run button
     val runButton = document.createElement("button").asInstanceOf[dom.html.Button]
@@ -82,24 +99,21 @@ Fin"""
     
     val outputArea = document.createElement("pre").asInstanceOf[dom.html.Pre]
     outputArea.id = "output"
-    outputArea.style.width = "100%"
-    outputArea.style.height = "200px"
-    outputArea.style.border = "1px solid #ccc"
-    outputArea.style.padding = "10px"
-    outputArea.style.backgroundColor = "#f9f9f9"
-    outputArea.style.overflow = "auto"
     body.appendChild(outputArea)
     
-    // Add some basic styling
-    body.style.fontFamily = "Arial, sans-serif"
-    body.style.margin = "20px"
   }
   
   private def runPseudoCode(): Unit = {
-    val inputArea = document.getElementById("pseudoCodeInput").asInstanceOf[dom.html.TextArea]
     val outputArea = document.getElementById("output").asInstanceOf[dom.html.Pre]
     
-    val code = inputArea.value
+    // Get code from Ace editor
+    val editor = dom.window.asInstanceOf[scala.scalajs.js.Dynamic].pseudoCodeEditor
+    val code = if (editor != null) {
+      editor.getValue().asInstanceOf[String]
+    } else {
+      // Fallback if Ace not initialized
+      ""
+    }
     
     if (code.trim.isEmpty) {
       outputArea.textContent = "Please enter some pseudo code to run."
@@ -113,27 +127,33 @@ Fin"""
     PseudoInterpreter.run(code, webConsole) match {
       case Left(error) =>
         outputArea.textContent = s"Error: $error"
-        outputArea.style.color = "red"
+        outputArea.className = "error"
         
       case Right(result) =>
         outputArea.textContent = result.console.getOutput
-        outputArea.style.color = "black"
+        outputArea.className = "success"
     }
   }
   
   private def loadSelectedAlgorithm(): Unit = {
     val dropdown = document.getElementById("algorithmSelector").asInstanceOf[dom.html.Select]
-    val inputArea = document.getElementById("pseudoCodeInput").asInstanceOf[dom.html.TextArea]
     
     val selectedKey = dropdown.value
     
     if (selectedKey != "default") {
       AlgorithmExamples.examples.get(selectedKey) match {
         case Some(example) =>
-          inputArea.value = example.code
+          // Set code in Ace editor
+          val editor = dom.window.asInstanceOf[scala.scalajs.js.Dynamic].pseudoCodeEditor
+          if (editor != null) {
+            editor.setValue(example.code, -1)
+          }
         case None =>
           // Should not happen, but handle gracefully
-          inputArea.value = "// Algorithm not found"
+          val editor = dom.window.asInstanceOf[scala.scalajs.js.Dynamic].pseudoCodeEditor
+          if (editor != null) {
+            editor.setValue("// Algorithm not found", -1)
+          }
       }
     }
   }
