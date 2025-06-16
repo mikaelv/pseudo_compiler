@@ -2,12 +2,11 @@
 This projet allows to interpret the Efrei pseudo-code, as taught in the module TI102 Algorithms.
 
 ## Missing features
-- arrays
-- int modulo
-- Ecrire with multiple arguments
+- matrices
+- functions
  
 ## Pseudo-code language
-Here is an example in French an in English, highlighting the syntax of the language :
+Here is an example in French and in English, highlighting the syntax of the language :
 
 ## Example
 

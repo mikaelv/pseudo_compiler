@@ -1,0 +1,58 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        cache: 'sbt'
+        
+    - name: Setup sbt
+      uses: sbt/setup-sbt@v1
+      
+    - name: Build Scala.js
+      run: sbt fullLinkJS
+      
+    - name: Prepare deployment directory
+      run: |
+        mkdir -p deploy
+        cp index.html deploy/
+        cp style.css deploy/
+        cp ace-pseudocode.js deploy/
+        cp -r target/scala-3.3.6/pseudo_compiler-opt deploy/target/scala-3.3.6/
+        
+    - name: Update HTML for production
+      run: |
+        sed -i 's|target/scala-3.3.6/pseudo_compiler-fastopt/main.js|target/scala-3.3.6/pseudo_compiler-opt/main.js|g' deploy/index.html
+        
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: './deploy'
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      if: github.ref == 'refs/heads/main'
